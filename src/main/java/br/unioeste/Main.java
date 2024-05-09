@@ -5,7 +5,7 @@ package br.unioeste;
 public class Main {
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.out.println("Uso: java Main [--servidor | -s] [--cliente | -c]");
+            Main.help();
             return;
         }
 
@@ -18,13 +18,25 @@ public class Main {
             servidor.run();
         }
         else if (argumento.equals("--cliente") || argumento.equals("-c")) {
+            if (args.length == 1) {
+                Main.help();
+                return;
+            }
+
+            String servidor_url = args[1];
+
             // Criar uma instância do cliente
-            Cliente cliente = new Cliente();
+            Cliente cliente = new Cliente(servidor_url);
             cliente.run();
         }
         else {
-            System.out.println("Argumento inválido. Use --servidor | -s para o servidor, ou --cliente | -c para o cliente.");
+            Main.help();
             return;
         }
+    }
+
+    private static void help() {
+        System.out.println("Uso: java Main [--servidor | -s] [--cliente | -c SERVIDOR_URL ]");
+        System.out.println("Onde SERVIDOR_URL define-se como IP:PORTA.");
     }
 }
