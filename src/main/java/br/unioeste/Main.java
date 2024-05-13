@@ -4,7 +4,7 @@ package br.unioeste;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        if (args.length == 0) {
+        if (args.length == 1) {
             Main.help();
             return;
         }
@@ -13,19 +13,16 @@ public class Main {
         String argumento = args[0];
 
         if (argumento.equals("--servidor") || argumento.equals("-s")) {
-            // Criar uma instância do servidor
+            String porta = args[1];
+
+            // Criar uma instância do servidor e executa
             Servidor servidor = new Servidor();
-            servidor.run();
+            servidor.run(porta);
         }
         else if (argumento.equals("--cliente") || argumento.equals("-c")) {
-            if (args.length == 1) {
-                Main.help();
-                return;
-            }
-
             String servidor_url = args[1];
 
-            // Criar uma instância do cliente
+            // Criar uma instância do cliente e executa
             Cliente cliente = new Cliente(servidor_url);
             cliente.run();
         }
@@ -36,7 +33,7 @@ public class Main {
     }
 
     private static void help() {
-        System.out.println("Uso: java Main [--servidor | -s] [--cliente | -c SERVIDOR_URL ]");
-        System.out.println("Onde SERVIDOR_URL define-se como IP:PORTA.");
+        System.out.println("Iniciar servidor:  java Main [ --servidor | -s ] PORTA");
+        System.out.println("Iniciar cliente:   java Main [ --cliente  | -c ] [ IP | DOMINIO ]:PORTA");
     }
 }
