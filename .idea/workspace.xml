@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8964196e-dc90-4cd2-8072-2d6c365901dc" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/unioeste/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/unioeste/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/unioeste/Servidor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/unioeste/Servidor.java" afterDir="false" />
-    </list>
+    <list default="true" id="8964196e-dc90-4cd2-8072-2d6c365901dc" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -60,6 +56,27 @@
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RunManager">
+    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="br.unioeste.Main" />
+      <module name="ChatGroup.main" />
+      <option name="PROGRAM_PARAMETERS" value="-s 8008" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="br.unioeste.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Main" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

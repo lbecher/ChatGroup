@@ -4,7 +4,7 @@ package br.unioeste;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        if (args.length == 1) {
+        if (args.length < 2) {
             Main.help();
             return;
         }
@@ -13,11 +13,11 @@ public class Main {
         String argumento = args[0];
 
         if (argumento.equals("--servidor") || argumento.equals("-s")) {
-            String porta = args[1];
+            String port = args[1];
 
             // Criar uma instância do servidor e executa
-            Servidor servidor = new Servidor();
-            servidor.run(porta);
+            Server server = new Server(port);
+            server.run();
         }
         else if (argumento.equals("--cliente") || argumento.equals("-c")) {
             String servidor_url = args[1];
