@@ -16,40 +16,28 @@ public class Server {
 
     // Método que inicia o servidor.
     public void run() {
-        System.out.println("Inicialiazando o servidor...");
+        serverMessage("Inicialiazando o servidor...");
 
         try {
             // Inicializa o sevidor de soquetes.
             ServerSocket serverSocket = new ServerSocket(this.port);
-            System.out.println("O servidor está rodando e aguardando por conexões.");
+            serverMessage("O servidor está rodando e aguardando por conexões.");
 
             // Quando uma nova conexão é identificada, instancia um novo soquete (cliente).
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Novo cliente conectado: " + clientSocket);
+                serverMessage("Novo cliente conectado: " + clientSocket);
 
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
-                clientHandler.setUsername();    // Configura nome de usuario.
-                boolean usernameTaken = false;  // Flag para verificar se o nome ja foi utilizado.
-
-               //
-                String username = clientHandler.getUsername();
-                usernameTaken = isUsernameTaken(username);
-
-                if (username == null) {
-                    System.out.println("Deu ruim!");
-                }
-                System.out.println("Nome de usuário: " + username);
 
                 // Se nome nao utilizado : add novo usuario na lista e cria nova thread.
-                if (!usernameTaken) {
+                if (clientHandler.setUsername()) {
                     clients.add(clientHandler);
                     new Thread(clientHandler).start();
                 } else {
                     clientSocket.close(); // Fecha a conexão com o cliente.
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -63,12 +51,12 @@ public class Server {
         }
     }
 
-    private void serverMessage(String str) {
-        System.out.println("[Server Message] : " + str);
+    private static void serverMessage(String str) {
+        System.out.println("[Server Message]: " + str);
     }
 
     // Metodo que verifica se o nome de usuario ja esta sendo utilizado.
-    private boolean isUsernameTaken(String username) throws IOException {
+    private static boolean isUsernameTaken(String username) throws IOException {
         for (ClientHandler clientHandler : clients) {
             if (clientHandler.getUsername().equals(username)) {
                 return true;
@@ -125,9 +113,35 @@ public class Server {
             }
         }
 
-        public String setUsername() throws IOException {
-            out.println("Enter your username:");
-            return in.readLine();
+        public boolean setUsername() throws IOException {
+            while (true) {
+                // REGISTRO <username>
+                String command = in.readLine();
+                String[] splited_command = command.split(" ");
+
+                if (splited_command.length == 2) {
+                    String action = splited_command[0];
+
+                    if (action.equals("REGISTRO")) {
+                        String username = splited_command[1];
+
+                        if (!isUsernameTaken(username)) {
+                            out.println("REGISTRO_OK");
+                            this.username = username;
+                            return true;
+                        }
+                        else {
+                            out.println("ERRO Nome de usuário em uso! Tente novamente.");
+                        }
+                    }
+                    else {
+                        out.println("ERRO Comando inválido ou não esparado!");
+                    }
+                }
+                else {
+                    out.println("ERRO Argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
+                }
+            }
         }
 
         public String getUsername() throws IOException {
@@ -139,6 +153,8 @@ public class Server {
             out.println("Type Your Message");
         }
 
-
+        private void serverMessage(String str) {
+            out.println("[Server Message]: " + str);
+        }
     }
 }
