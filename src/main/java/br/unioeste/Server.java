@@ -113,10 +113,18 @@ public class Server {
             }
         }
 
+        public void sendMessage(String message) {
+            out.println(message);
+        }
+
+        public String recieveMessage() throws IOException {
+            return in.readLine();
+        }
+
         public boolean setUsername() throws IOException {
             while (true) {
                 // REGISTRO <username>
-                String command = in.readLine();
+                String command = recieveMessage();
                 String[] splited_command = command.split(" ");
 
                 if (splited_command.length == 2) {
@@ -126,35 +134,26 @@ public class Server {
                         String username = splited_command[1];
 
                         if (!isUsernameTaken(username)) {
-                            out.println("REGISTRO_OK");
+                            sendMessage("REGISTRO_OK");
                             this.username = username;
                             return true;
                         }
                         else {
-                            out.println("ERRO Nome de usuário em uso! Tente novamente.");
+                            sendMessage("ERRO Nome de usuário em uso! Tente novamente.");
                         }
                     }
                     else {
-                        out.println("ERRO Comando inválido ou não esparado!");
+                        sendMessage("ERRO Comando inválido ou não esparado!");
                     }
                 }
                 else {
-                    out.println("ERRO Argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
+                    sendMessage("ERRO Argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
                 }
             }
         }
 
         public String getUsername() throws IOException {
             return this.username;
-        }
-
-        public void sendMessage(String message) {
-            out.println(message);
-            out.println("Type Your Message");
-        }
-
-        private void serverMessage(String str) {
-            out.println("[Server Message]: " + str);
         }
     }
 }
