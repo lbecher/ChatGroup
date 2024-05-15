@@ -14,38 +14,32 @@ public class Server {
         this.port = Integer.parseInt(port);
     }
 
-    private void serverMessage(String str) {
-        System.out.println("[Server Message] : " + str);
-    }
-
-    // Metodo que verifica se o nome de usuario ja esta sendo utilizado.
-    private boolean isUsernameTaken(String username) throws IOException {
-        for (ClientHandler clientHandler : clients) {
-            if (clientHandler.getUsername().equals(username)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // Método que inicia o servidor.
     public void run() {
-        serverMessage("Inicialiazando o servidor...");
+        System.out.println("Inicialiazando o servidor...");
 
         try {
-            // Servidor aguarda por conexoes.
+            // Inicializa o sevidor de soquetes.
             ServerSocket serverSocket = new ServerSocket(this.port);
-            serverMessage("O servidor está rodando e aguardando por conexões.");
+            System.out.println("O servidor está rodando e aguardando por conexões.");
 
+            // Quando uma nova conexão é identificada, instancia um novo soquete (cliente).
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                serverMessage("Novo cliente conectado: " + clientSocket);
+                System.out.println("Novo cliente conectado: " + clientSocket);
 
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 clientHandler.setUsername();    // Configura nome de usuario.
                 boolean usernameTaken = false;  // Flag para verificar se o nome ja foi utilizado.
 
-                usernameTaken = isUsernameTaken(clientHandler.getUsername());
+               //
+                String username = clientHandler.getUsername();
+                usernameTaken = isUsernameTaken(username);
+
+                if (username == null) {
+                    System.out.println("Deu ruim!");
+                }
+                System.out.println("Nome de usuário: " + username);
 
                 // Se nome nao utilizado : add novo usuario na lista e cria nova thread.
                 if (!usernameTaken) {
@@ -67,6 +61,20 @@ public class Server {
                 clientHandler.sendMessage(message);
             }
         }
+    }
+
+    private void serverMessage(String str) {
+        System.out.println("[Server Message] : " + str);
+    }
+
+    // Metodo que verifica se o nome de usuario ja esta sendo utilizado.
+    private boolean isUsernameTaken(String username) throws IOException {
+        for (ClientHandler clientHandler : clients) {
+            if (clientHandler.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ClientHandler para lidar com os clientes conectados.
