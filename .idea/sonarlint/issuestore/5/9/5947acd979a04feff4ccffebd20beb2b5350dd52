@@ -1,0 +1,8 @@
+
+l
+java:S2095%"JUse try-with-resources or close this "ServerSocket" in a "finally" clause.(γ½άγψÿÿÿÿ8ΏΧ”Έχ1
+G	java:S106"+Replace this use of System.out by a logger.(ƒζ8ΘΧ”Έχ1
+L	java:S106_"+Replace this use of System.out by a logger.(“—‡ώÿÿÿÿ8ίΧ”Έχ1
+G	java:S106f"+Replace this use of System.out by a logger.(Β•ο8γΧ”Έχ1
+‰
+java:S1130}"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(΄•ΎΡ8ηΧ”Έχ1
