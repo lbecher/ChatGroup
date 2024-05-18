@@ -2,8 +2,10 @@ package br.unioeste;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class Server {
     // Numero da porta do servidor.
@@ -58,11 +60,12 @@ public class Server {
 
     // ---------------------------------------------------
     // Classe para as gerenciar as salas.
-    private class Room {
+    private static class Room {
         private HashSet<String> members;
+        private String admin;
         private String hashedPassword;
 
-        public Room(String hashedPassword) {
+        public Room(String admin, String hashedPassword) {
             this.members = new HashSet<String>();
             this.hashedPassword = hashedPassword;
         }
@@ -71,7 +74,11 @@ public class Server {
             this.members.add(username);
         }
 
-        public void removeMember(String username) {
+        public void removeMember(String username, ClientHandler client) {
+            if (this.admin.equals(username)) {
+                client.sendMessage("ERRO O administrador não pode ser removido!");
+                return;
+            }
             this.members.remove(username);
         }
 
@@ -83,6 +90,9 @@ public class Server {
         }
 
         public void sendMessageForMembers(String message) {
+            ClientHandler admin = clients.get(this.admin);
+            admin.sendMessage(message);
+
             for (String member : this.members) {
                 ClientHandler client = clients.get(member);
                 client.sendMessage(message);
@@ -122,12 +132,46 @@ public class Server {
                 // conexão ser fechada.
                 this.registerClient();
 
-                /*
-                 *
-                 *   Lógicas de salas e mensagens vem aqui.....
-                 *
-                 */
+                while (true) {
+                    String message = recieveMessage();
+                    String[] splited_message = message.split(" ");
 
+                    switch (splited_message[0]) {
+                        case "CRIAR_SALA":
+                            // Lida com o restante do comando em outro método.
+                            handleRoomCreation(splited_message);
+                            break;
+                        
+                        case "LISTAR_SALAS":
+                            // Comando simples, não precisa de um handle.
+                            listRooms();
+                            break;
+                        
+                        case "ENTRAR_SALA":
+                            
+                            break;
+                        
+                        case "SAIR_SALA":
+                            
+                            break;
+                        
+                        case "FECHAR_SALA":
+                            
+                            break;
+                        
+                        case "ENVIAR_MENSAGEM":
+                            
+                            break;
+
+                        case "BANIR_USUARIO":
+                            
+                            break;
+                    
+                        default:
+                            sendMessage("ERRO Comando inválido ou não esparado!");
+                            break;
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -136,14 +180,14 @@ public class Server {
         public void registerClient() throws IOException {
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
-                String command = recieveMessage();
-                String[] splited_command = command.split(" ");
+                String message = recieveMessage();
+                String[] splited_message = message.split(" ");
 
-                if (splited_command.length == 2) {
-                    String action = splited_command[0];
+                if (splited_message.length == 2) {
+                    String action = splited_message[0];
 
                     if (action.equals("REGISTRO")) {
-                        String username = splited_command[1];
+                        String username = splited_message[1];
 
                         if (!isUsernameTaken(username)) {
                             this.username = username;
@@ -163,6 +207,50 @@ public class Server {
                     sendMessage("ERRO Comando ou argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
                 }
             }
+        }
+
+        private void handleRoomCreation(String[] splited_message) {
+            if (splited_message.length < 3) {
+                sendMessage("ERRO Argumentos faltando em CRIAR_SALA!");
+                return;
+            }
+
+            switch (splited_message[1]) {
+                case "PUBLICA":
+                    createRoom(splited_message[2], this.username, null);
+                    break;
+                
+                case "PRIVADA":
+                    if (splited_message.length != 4) {
+                        sendMessage("ERRO Quantidade errada de argumentos em CRIAR_SALA!");
+                        return;
+                    }
+                    createRoom(splited_message[2], this.username, splited_message[3]);
+                    break;
+            
+                default:
+                    sendMessage("ERRO Argumento inválido em CRIAR_SALA!");
+                    break;
+            }
+        }
+
+        private void createRoom(String name, String admin, String hashedPassword) {
+            if (!rooms.containsKey(name)) {
+                Room room = new Room(admin, hashedPassword);
+                rooms.put(name, room);
+                sendMessage("CRIAR_SALA_OK");
+            } else {
+                sendMessage("ERRO Uma sala já existe com esse nome!");
+            }
+        }
+
+        private void listRooms() {
+            String concatenatedRoomsNames = rooms.keySet().stream()
+                .filter(name -> name instanceof String)
+                .map(name -> (String) name)
+                .collect(Collectors.joining(" "));
+            
+            sendMessage("SALAS " + concatenatedRoomsNames);
         }
 
         public void removeUser() throws IOException {
