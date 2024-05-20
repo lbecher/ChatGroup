@@ -61,12 +61,18 @@ public class Server {
     // ---------------------------------------------------
     // Classe para as gerenciar as salas.
     private static class Room {
+        // Nomes de usuários dos membros.
         private HashSet<String> members;
+
+        private String room_name;
         private String admin;
         private String hashedPassword;
 
-        public Room(String admin, String hashedPassword) {
+        public Room(String room_name, String admin, String hashedPassword) {
             this.members = new HashSet<String>();
+
+            this.room_name = room_name;
+            this.admin = admin;
             this.hashedPassword = hashedPassword;
         }
 
@@ -89,7 +95,9 @@ public class Server {
             return true;
         }
 
-        public void sendMessageForMembers(String message) {
+        public void sendMessageForMembers(String sender, String sender_message) {
+            String message = "MENSAGEM " + this.room_name + " " + sender + " " + sender_message;
+
             ClientHandler admin = clients.get(this.admin);
             admin.sendMessage(message);
 
@@ -148,7 +156,8 @@ public class Server {
                             break;
                         
                         case "ENTRAR_SALA":
-                            
+                            // ENTRAR_SALA <nome_da_sala> [ hash(senha) ]
+                            handleJoinRoom(splited_message);
                             break;
                         
                         case "SAIR_SALA":
@@ -160,11 +169,8 @@ public class Server {
                             break;
                         
                         case "ENVIAR_MENSAGEM":
-                            
-                            break;
-
-                        case "BANIR_USUARIO":
-                            
+                            // Lida com o restante do comando em outro método.
+                            handleSendMessage(splited_message);
                             break;
                     
                         default:
@@ -209,8 +215,43 @@ public class Server {
             }
         }
 
-        private void handleRoomCreation(String[] splited_message) {
+        private void handleJoinRoom(String[] splited_message) { 
+            String room_name = splited_message[1];
+
+            if (!rooms.containsKey(room_name)) {
+                sendMessage("ERRO A sala " + room_name + " não existe!");
+                return;
+            }
+
+            Room room = rooms.get(room_name);
+            room.addMember(this.username);
+        }
+
+        private void handleSendMessage(String[] splited_message) {
             if (splited_message.length < 3) {
+                sendMessage("ERRO Argumentos faltando em ENVIAR_MENSAGEM!");
+                return;
+            }
+
+            String room_name = splited_message[1];
+
+            if (!rooms.containsKey(room_name)) {
+                sendMessage("ERRO A sala " + room_name + " não existe!");
+                return;
+            }
+
+            String message = new String();
+
+            for (int i = 2; i < splited_message.length; i++) {
+                message.concat(splited_message[i]);
+            }
+
+            Room room = rooms.get(room_name);
+            room.sendMessageForMembers(this.username, message);
+        }
+
+        private void handleRoomCreation(String[] splited_message) {
+            if (splited_message.length != 3) {
                 sendMessage("ERRO Argumentos faltando em CRIAR_SALA!");
                 return;
             }
@@ -234,10 +275,10 @@ public class Server {
             }
         }
 
-        private void createRoom(String name, String admin, String hashedPassword) {
-            if (!rooms.containsKey(name)) {
-                Room room = new Room(admin, hashedPassword);
-                rooms.put(name, room);
+        private void createRoom(String room_name, String admin, String hashedPassword) {
+            if (!rooms.containsKey(room_name)) {
+                Room room = new Room(room_name, admin, hashedPassword);
+                rooms.put(room_name, room);
                 sendMessage("CRIAR_SALA_OK");
             } else {
                 sendMessage("ERRO Uma sala já existe com esse nome!");
