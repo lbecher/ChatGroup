@@ -1,8 +1,11 @@
 package br.unioeste;
 
-import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -225,6 +228,8 @@ public class Server {
 
             Room room = rooms.get(room_name);
             room.addMember(this.username);
+
+            //sendMessage("ENTRAR_SALA_OK " + room.getMembers());
         }
 
         private void handleSendMessage(String[] splited_message) {
@@ -240,10 +245,10 @@ public class Server {
                 return;
             }
 
-            String message = new String();
+            String message = "";
 
             for (int i = 2; i < splited_message.length; i++) {
-                message.concat(splited_message[i]);
+                message = message.concat(splited_message[i]);
             }
 
             Room room = rooms.get(room_name);
