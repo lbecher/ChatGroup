@@ -248,7 +248,7 @@ public class Server {
             String message = "";
 
             for (int i = 2; i < splited_message.length; i++) {
-                message = message.concat(splited_message[i]);
+                message = message.concat(" " + splited_message[i]);
             }
 
             Room room = rooms.get(room_name);
