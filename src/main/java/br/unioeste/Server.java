@@ -80,7 +80,7 @@ public class Server {
         }
 
         public boolean isMember(String username) {
-            return this.members.contains(username);
+            return this.members.contains(username) || this.admin.equals(username);
         }
 
         public void addMember(String username) {
