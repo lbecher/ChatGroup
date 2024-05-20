@@ -79,6 +79,10 @@ public class Server {
             this.hashedPassword = hashedPassword;
         }
 
+        public boolean isMember(String username) {
+            return this.members.contains(username);
+        }
+
         public void addMember(String username) {
             this.members.add(username);
         }
@@ -229,7 +233,7 @@ public class Server {
             Room room = rooms.get(room_name);
             room.addMember(this.username);
 
-            //sendMessage("ENTRAR_SALA_OK " + room.getMembers());
+            sendMessage("ENTRAR_SALA_OK");
         }
 
         private void handleSendMessage(String[] splited_message) {
@@ -245,13 +249,19 @@ public class Server {
                 return;
             }
 
+            Room room = rooms.get(room_name);
+
+            if (!room.isMember(this.username)) {
+                sendMessage("ERRO Você não é membro da sala " + room_name + "!");
+                return;
+            }
+
             String message = "";
 
             for (int i = 2; i < splited_message.length; i++) {
                 message = message.concat(" " + splited_message[i]);
             }
 
-            Room room = rooms.get(room_name);
             room.sendMessageForMembers(this.username, message);
         }
 
