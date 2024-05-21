@@ -86,7 +86,7 @@ public class Server {
 
         // Método para verificar se um usuário ja é membro da sala.
         public boolean isMember(String username) {
-            return this.members.contains(username);
+            return this.members.contains(username) || this.admin.equals(username);
         }
 
         // Método que adiciona novo membro na sala.
