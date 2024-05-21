@@ -69,7 +69,7 @@ public class Server {
         private String roomName;
         private String admin;
         private String hashedPassword;
-        private boolean is_private;
+        private boolean isPrivate;
 
         // Construtor.
         public Room(String roomName, String admin, String hashedPassword) {
@@ -79,17 +79,27 @@ public class Server {
 
             this.members = new HashSet<String>();
 
-            is_private = hashedPassword != null;
+            isPrivate = hashedPassword != null;
         }
 
         // Método para verificar se uma sala é privada.
-        public boolean isRoomPrivate() {
-            return is_private;
+        public boolean getIsPrivate() {
+            return isPrivate;
         }
 
         // Método para verificar se um usuário já é membro da sala.
         public boolean isMember(String username) {
             return this.members.contains(username) || this.admin.equals(username);
+        }
+
+        // Método para verificar se um usuário é admin da sala.
+        public boolean isAdmin(String username) {
+            return this.admin.equals(username);
+        }
+
+        // Método que lista todos os membros da sala.
+        public String listAllRoomMembers() {
+            return this.admin + " " + members.stream().collect(Collectors.joining(" "));
         }
 
         // Método que adiciona novo membro à sala.
@@ -126,7 +136,7 @@ public class Server {
             }
         }
 
-        public void exit(String member) {
+        public void exitRoom(String member) {
             this.removeMember(member);
             this.notifyMembersAboutMemberExit(member);
         }
@@ -155,9 +165,16 @@ public class Server {
             }
         }
 
-        // Método que lista todos os membros da sala.
-        public String listAllRoomMembers() {
-            return this.admin + " " + members.stream().collect(Collectors.joining(" "));
+        public void notifyMembersAboutRoomClose() {
+            String command = "SALA_FECHADA " + this.roomName;
+
+            ClientHandler admin = clients.get(this.admin);
+            admin.sendCommand(command);
+
+            for (String member : this.members) {
+                ClientHandler client = clients.get(member);
+                client.sendCommand(command);
+            }
         }
     }
 
@@ -220,6 +237,10 @@ public class Server {
                             break;
                         
                         case "FECHAR_SALA":
+                            handleCloseRoom(splitedCommand);
+                            break;
+                        
+                        case "BANIR_USUARIO":
                             
                             break;
                         
@@ -242,8 +263,8 @@ public class Server {
         public void registerClient() throws IOException {
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
-                String message = recieveCommand();
-                String[] splitedCommand = message.split(" ");
+                String command = recieveCommand();
+                String[] splitedCommand = command.split(" ");
 
                 if (splitedCommand.length == 2) {
                     String action = splitedCommand[0];
@@ -272,6 +293,33 @@ public class Server {
         }
 
         // Método que adiciona um membro na sala.
+        private void handleCloseRoom(String[] splitedCommand) { 
+            if (splitedCommand.length < 2) {
+                sendCommand("ERRO Argumentos faltando em ENTRAR_SALA!");
+                return;
+            }
+
+            String roomName = splitedCommand[1];
+
+            if (!rooms.containsKey(roomName)) {
+                sendCommand("ERRO A sala " + roomName + " não existe!");
+                return;
+            }
+
+            Room room = rooms.get(roomName);
+
+            if (!room.isAdmin(this.username)) {
+                sendCommand("ERRO Apenas o admin pode fechar a sala!");
+                return;
+            }
+
+            room.notifyMembersAboutRoomClose();
+            rooms.remove(roomName);
+
+            sendCommand("FECHAR_SALA_OK");
+        }
+
+        // Método que adiciona um membro na sala.
         private void handleJoinRoom(String[] splitedCommand) { 
             if (splitedCommand.length < 2) {
                 sendCommand("ERRO Argumentos faltando em ENTRAR_SALA!");
@@ -287,7 +335,7 @@ public class Server {
 
             Room room = rooms.get(roomName);
 
-            if (room.isRoomPrivate()) {
+            if (room.getIsPrivate()) {
                 if (splitedCommand.length < 3) {
                     sendCommand("ERRO Não foi informado uma senha para entrar na sala privada " + roomName + "!");
                     return;
@@ -328,9 +376,9 @@ public class Server {
                 return;
             }
 
-            String message = "";
+            String message = splitedCommand[2];
 
-            for (int i = 2; i < splitedCommand.length; i++) {
+            for (int i = 3; i < splitedCommand.length; i++) {
                 message = message.concat(" " + splitedCommand[i]);
             }
 
@@ -397,7 +445,7 @@ public class Server {
 
             sendCommand("SAIR_SALA_OK");
 
-            room.exit(this.username);
+            room.exitRoom(this.username);
         }
 
         // Método que lista todas as salas.
@@ -407,7 +455,7 @@ public class Server {
                 .map(entry -> {
                     String name = entry.getKey();
                     Room room = entry.getValue();
-                    String availabilityString = room.isRoomPrivate() ? "Privada" : "Publica";
+                    String availabilityString = room.getIsPrivate() ? "Privada" : "Publica";
                     return name + "(" + availabilityString + ")";
                 })
                 .collect(Collectors.joining(" "));
