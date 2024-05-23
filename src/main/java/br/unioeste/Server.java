@@ -6,8 +6,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -188,6 +192,7 @@ public class Server {
         private Socket socket;
         private PrintWriter out;
         private BufferedReader in;
+        private KeyPair keyPair;
 
         // Construtor.
         public ClientHandler(Socket socket) {
@@ -210,6 +215,9 @@ public class Server {
                 // Permanece nesse método até obter um nome de usuário válido
                 // ou a conexão ser fechada.
                 this.registerClient();
+
+                // Criptografa a conexão entre o cliente e o servidor.
+                //this.authenticateClient();
 
                 while (true) {
                     String command = recieveCommand();
@@ -290,6 +298,34 @@ public class Server {
                     sendCommand("ERRO Comando ou argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
                 }
             }
+        }
+
+        // Método que criar uma conexão criptografada entre o cliente e o servidor.
+        public boolean authenticateClient() throws IOException {
+            String command = recieveCommand();
+            String[] splitedCommand = command.split(" ");
+
+            if (splitedCommand.length != 2) {
+                sendCommand("ERRO Comando inválido ou com número errado de argumentos!");
+                return false;
+            }
+
+            if (!splitedCommand[0].equals("AUTENTICACAO")) {
+                sendCommand("ERRO Comando inesperado!");
+                return false;
+            }
+
+            try {
+                this.generateKeyPair();
+            } catch (NoSuchAlgorithmException e) {
+                sendCommand("ERRO Erro no servidor!");
+                serverLog(e.toString());
+                return false;
+            }
+
+            // Falta coisas aqui
+
+            return true;
         }
 
         // Método que adiciona um membro na sala.
@@ -486,6 +522,32 @@ public class Server {
         // Método que recebe os comandos do servidor.
         private String recieveCommand() throws IOException {
             return in.readLine();
+        }
+
+        private String decodeBase64(String string) {
+            byte[] decodedBytes = Base64.getDecoder().decode(string);
+            return new String(decodedBytes);
+        }
+
+        private String encodeBase64(String string) {
+            byte[] stringBytes = string.getBytes();
+            return Base64.getEncoder().encodeToString(stringBytes);
+        }
+
+        private void generateKeyPair() throws NoSuchAlgorithmException {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(1024);
+            this.keyPair = keyPairGenerator.generateKeyPair();
+        }
+
+        private String getPublicKey() {
+            Key publicKey = keyPair.getPublic();
+            return publicKey.toString();
+        }
+
+        private String getPrivateKey() {
+            Key privateKey = keyPair.getPrivate();
+            return privateKey.toString();
         }
     }
 }
