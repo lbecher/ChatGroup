@@ -323,6 +323,9 @@ public class Server {
                 return false;
             }
 
+            String publicKey = this.getPublicKey();
+            sendCommand("CHAVE_PUBLICA " + this.encodeBase64(publicKey));
+
             // Falta coisas aqui
 
             return true;
