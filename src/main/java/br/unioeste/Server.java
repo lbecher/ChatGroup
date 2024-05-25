@@ -126,7 +126,6 @@ public class Server {
 
         // Método que valida a senha hash.
         public boolean validateHashedPassword(String hashedPassword) {
-            serverLog(this.hashedPassword + " == " + hashedPassword);
             return this.hashedPassword.equals(hashedPassword);
         }
 
