@@ -71,24 +71,22 @@ public class Server {
 
     // CLASSE PARA AS SALAS.
     private static class Room {
-        // Nomes de usuários dos membros.
-        private HashSet<String> members;
         private String roomName;
         private String admin;
         private String hashedPassword;
         private boolean isPrivate;
 
-
+        // Nomes de usuários dos membros.
+        private HashSet<String> members;
 
         // Construtor.
-        public Room(String roomName, String admin, String hashedPassword) {
+        public Room(String roomName, String admin, boolean isPrivate, String hashedPassword) {
             this.roomName = roomName;
             this.admin = admin;
+            this.isPrivate = isPrivate;
             this.hashedPassword = hashedPassword;
 
             this.members = new HashSet<String>();
-
-            isPrivate = hashedPassword != null;
         }
 
 
@@ -110,20 +108,6 @@ public class Server {
 
 
 
-        // Método que cria as salas publicas ou privadas.
-        public void createRoom(String roomName, String admin, String hashedPassword) {
-            if (!rooms.containsKey(roomName)) {
-                Room room = new Room(roomName, admin, hashedPassword);
-                rooms.put(roomName, room);
-
-                ClientHandler roomAdmin = clients.get(this.admin);
-                roomAdmin.sendCommand("CRIAR_SALA_OK");
-            } else {
-                ClientHandler roomAdmin = clients.get(this.admin);
-                roomAdmin.sendCommand("ERRO Uma sala já existe com esse nome!");
-            }
-        }
-
         // Método para o cliente entrar na sala.
         public void joinRoom(String member) {
             notifyMembersAboutNewMember(member);
@@ -142,8 +126,8 @@ public class Server {
 
         // Método que valida a senha hash.
         public boolean validateHashedPassword(String hashedPassword) {
-            // DISCUTIR ISSO AAAAAAAAAAAAAAAAAH
-            return (this.hashedPassword != null && !this.hashedPassword.equals(hashedPassword)) ? false : true;
+            serverLog(this.hashedPassword + " == " + hashedPassword);
+            return this.hashedPassword.equals(hashedPassword);
         }
 
         // Método para o usuário sair de uma sala.
@@ -309,7 +293,7 @@ public class Server {
                             break;
                         
                         case "BANIR_USUARIO":
-                            handleBanMember(splitedCommand);
+                            handleBanUser(splitedCommand);
                             break;
                         
                         case "ENVIAR_MENSAGEM":
@@ -418,26 +402,41 @@ public class Server {
                 return;
             }
 
+            String roomName = splitedCommand[2];
+
+            if (rooms.containsKey(roomName)) {
+                sendCommand("ERRO Uma sala já existe com esse nome!");
+                return;
+            }
+
+            String hashedPassword = null;
+            boolean isPrivate = false;
+
             switch (splitedCommand[1]) {
                 case "PUBLICA":
                     if (splitedCommand.length != 3) {
-                        sendCommand("ERRO Quantidade errada de argumentos em CRIAR_SALA!");
+                        sendCommand("ERRO Argumentos demais em CRIAR_SALA!");
                     }
-                    rooms.get(splitedCommand[2]).createRoom(splitedCommand[2], this.username, null);
                     break;
 
                 case "PRIVADA":
                     if (splitedCommand.length != 4) {
-                        sendCommand("ERRO Quantidade errada de argumentos em CRIAR_SALA!");
+                        sendCommand("ERRO Argumentos faltando em CRIAR_SALA!");
                         return;
                     }
-                    rooms.get(splitedCommand[2]).createRoom(splitedCommand[2], this.username, splitedCommand[3]);
+                    hashedPassword = splitedCommand[3];
+                    isPrivate = true;
                     break;
 
                 default:
                     sendCommand("ERRO Argumento inválido em CRIAR_SALA!");
-                    break;
+                    return;
             }
+
+            Room room = new Room(roomName, this.username, isPrivate, hashedPassword);
+            rooms.put(roomName, room);
+
+            sendCommand("CRIAR_SALA_OK");
         }
 
         // Método para listar todas as salas.
@@ -472,7 +471,7 @@ public class Server {
                     return;
                 }
 
-                String hashedPassword = splitedCommand[1];
+                String hashedPassword = splitedCommand[2];
 
                 if (!room.validateHashedPassword(hashedPassword)) {
                     sendCommand("ERRO Senha incorreta!");
@@ -537,7 +536,7 @@ public class Server {
         }
 
         // Método para banir um usuário de uma sala.
-        private void handleBanMember(String[] splitedCommand) {
+        private void handleBanUser(String[] splitedCommand) {
             // Verifica a quantidade de argumentos lidos.
             if (splitedCommand.length != 3) {
                 sendCommand("ERRO Argumentos inválidos ou incompletos para o comando BANIR_USUARIO.");
@@ -575,7 +574,7 @@ public class Server {
 
             room.banMember(username);
             
-            sendCommand("BANIDO_DA_SALA " + roomName);
+            sendCommand("BANIMENTO_OK " + username);
         }
 
         // Método que encaminha as mensagens para os membros da sala.
