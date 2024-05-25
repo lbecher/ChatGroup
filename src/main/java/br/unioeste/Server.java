@@ -12,7 +12,6 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -95,7 +94,7 @@ public class Server {
 
 
         // Método para verificar se uma sala é privada.
-        public boolean getIsPrivate() {
+        public boolean isPrivate() {
             return isPrivate;
         }
 
@@ -157,14 +156,14 @@ public class Server {
         public void removeMember(String member) {
             if (this.admin.equals(member)) {
                 ClientHandler client = clients.get(member);
-                client.sendCommand("ERRO : O administrador não pode ser removido!");
+                client.sendCommand("ERRO O administrador não pode ser removido!");
                 return;
             }
             this.members.remove(member);
         }
 
         // Método para banir um usuário.
-        public void banUser(String member) {
+        public void banMember(String member) {
             if (member != null) {
                 this.members.remove(member);
                 notifyAboutUserBan(member);
@@ -172,7 +171,7 @@ public class Server {
         }
 
         // Método que encaminha as mensagens para os membros da sala.
-        public void sendCommandForMembers(String sender, String message) {
+        public void sendMessageForMembers(String sender, String message) {
             String command = "MENSAGEM " + this.roomName + " " + sender + " " + message;
 
             ClientHandler admin = clients.get(this.admin);
@@ -227,13 +226,8 @@ public class Server {
 
         //Método que notifica os membros de uma sala sobre o banimento de um usuário da sala.
         public void notifyAboutUserBan(String member) {
-            // Mensagem para o admin da sala.
-            String command = "BANIMENTO_OK " + member;
-            ClientHandler admin = clients.get(this.admin);
-            admin.sendCommand(command);
-
             // Mensagem para o usuário banido.
-            command = "BANIDO_DA_SALA " + this.roomName;
+            String command = "BANIDO_DA_SALA " + this.roomName;
             ClientHandler member_banned = clients.get(member);
             member_banned.sendCommand(command);
 
@@ -315,12 +309,12 @@ public class Server {
                             break;
                         
                         case "BANIR_USUARIO":
-                            handleBanUser(splitedCommand);
+                            handleBanMember(splitedCommand);
                             break;
                         
                         case "ENVIAR_MENSAGEM":
                             // Lida com o restante do comando em outro método.
-                            handleSendCommand(splitedCommand);
+                            handleSendMessage(splitedCommand);
                             break;
                     
                         default:
@@ -335,9 +329,20 @@ public class Server {
 
 
 
+        // Método que recebe as streams de comandos do servidor.
+        private String recieveCommand() throws IOException {
+            return in.readLine();
+        }
+
+        // Método que envia as streams dos comandos para cliente.
+        private void sendCommand(String command) {
+            out.println(command);
+        }
+
+
+
         // Método que registra o usuário no servidor.
         public void registerClient() throws IOException {
-
             // Permanece nesse método até obter um nome de usuário válid ou a conexão ser fechada.
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
@@ -360,15 +365,15 @@ public class Server {
                             return;
                         }
                         else {
-                            sendCommand("ERRO : Nome de usuário em uso! Tente novamente.");
+                            sendCommand("ERRO Nome de usuário em uso! Tente novamente.");
                         }
                     }
                     else {
-                        sendCommand("ERRO : Comando inválido ou não esparado!");
+                        sendCommand("ERRO Comando inválido ou não esparado!");
                     }
                 }
                 else {
-                    sendCommand("ERRO : Comando ou argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
+                    sendCommand("ERRO Comando ou argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
                 }
             }
         }
@@ -404,43 +409,33 @@ public class Server {
             return true;
         }
 
-        // Método que recebe as streams de comandos do servidor.
-        private String recieveCommand() throws IOException {
-            return in.readLine();
-        }
-
-        // Método que envia as streams dos comandos para cliente.
-        private void sendCommand(String command) {
-            out.println(command);
-        }
-
 
 
         // Método para criar uma sala.
         private void handleRoomCreation(String[] splitedCommand) {
             if (splitedCommand.length <= 2 || splitedCommand.length >= 5) {
-                sendCommand("ERRO : Argumentos faltando em CRIAR_SALA!");
+                sendCommand("ERRO Argumentos faltando em CRIAR_SALA!");
                 return;
             }
 
             switch (splitedCommand[1]) {
                 case "PUBLICA":
                     if (splitedCommand.length != 3) {
-                        sendCommand("ERRO : Quantidade errada de argumentos em CRIAR_SALA!");
+                        sendCommand("ERRO Quantidade errada de argumentos em CRIAR_SALA!");
                     }
                     rooms.get(splitedCommand[2]).createRoom(splitedCommand[2], this.username, null);
                     break;
 
                 case "PRIVADA":
                     if (splitedCommand.length != 4) {
-                        sendCommand("ERRO : Quantidade errada de argumentos em CRIAR_SALA!");
+                        sendCommand("ERRO Quantidade errada de argumentos em CRIAR_SALA!");
                         return;
                     }
                     rooms.get(splitedCommand[2]).createRoom(splitedCommand[2], this.username, splitedCommand[3]);
                     break;
 
                 default:
-                    sendCommand("ERRO : Argumento inválido em CRIAR_SALA!");
+                    sendCommand("ERRO Argumento inválido em CRIAR_SALA!");
                     break;
             }
         }
@@ -448,19 +443,10 @@ public class Server {
         // Método para listar todas as salas.
         private void handleListRooms(String[] splitedCommand) {
             if (splitedCommand.length != 1) {
-                sendCommand("ERRO : Argumentos inválidos para o comando LISTAR_SALAS");
+                sendCommand("ERRO Argumentos inválidos para o comando LISTAR_SALAS");
             }
 
-            String concatenatedRoomsNames = rooms.entrySet().stream()
-                    .filter(entry -> entry.getKey() instanceof String && entry.getValue() instanceof Room)
-                    .map(entry -> {
-                        String name = entry.getKey();
-                        Room room = entry.getValue();
-                        String availabilityString = room.getIsPrivate() ? "Privada" : "Publica";
-                        return name + "(" + availabilityString + ")";
-                    })
-                    .collect(Collectors.joining(" "));
-
+            String concatenatedRoomsNames = String.join(" ", rooms.keySet());
             sendCommand("SALAS " + concatenatedRoomsNames);
         }
 
@@ -480,7 +466,7 @@ public class Server {
 
             Room room = rooms.get(roomName);
 
-            if (room.getIsPrivate()) {
+            if (room.isPrivate()) {
                 if (splitedCommand.length < 3) {
                     sendCommand("ERRO Não foi informado uma senha para entrar na sala privada " + roomName + "!");
                     return;
@@ -551,42 +537,49 @@ public class Server {
         }
 
         // Método para banir um usuário de uma sala.
-        private void handleBanUser(String[] splitedCommand) {
+        private void handleBanMember(String[] splitedCommand) {
             // Verifica a quantidade de argumentos lidos.
             if (splitedCommand.length != 3) {
-                sendCommand("ERRO : Argumentos inválidos ou incompletos para o comando BANIR_USUARIO.");
+                sendCommand("ERRO Argumentos inválidos ou incompletos para o comando BANIR_USUARIO.");
                 return;
             }
+
+            String roomName = splitedCommand[1];
+            String username = splitedCommand[2];
 
             // Verifica se a sala existe.
-            if (!rooms.containsKey(splitedCommand[1])) {
-                sendCommand("ERRO : A sala informada nao existe.");
+            if (!rooms.containsKey(roomName)) {
+                sendCommand("ERRO A sala " + roomName + " não existe!");
                 return;
             }
+
+            Room room = rooms.get(roomName);
 
             // Verifica se o banidor é o admin da sala.
-            if (!Objects.equals(rooms.get(splitedCommand[1]).admin, this.username)) {
-                sendCommand("ERRO : Voce não é o admin da sala.");
+            if (!room.isAdmin(this.username)) {
+                sendCommand("ERRO Apenas o admin pode banir um usuário!");
                 return;
             }
 
-            // Verifica que o usuário a ser banido é membro da sala.
-            if (!rooms.get(splitedCommand[1]).isMember(splitedCommand[2])) {
-                sendCommand("ERRO : Usuario informado não é membro da sala.");
+            // Verifica se o usuário a ser banido é membro da sala.
+            if (!room.isMember(username)) {
+                sendCommand("ERRO Usuário informado não é membro da sala.");
                 return;
             }
 
             // Verifica se o usuário a ser banido é o próprio usuário banidor.
-            if (Objects.equals(this.username, splitedCommand[2])) {
-                sendCommand("ERRO : Você não pode banir-se da sala.");
+            if (this.username.equals(username)) {
+                sendCommand("ERRO Você não pode banir-se da sala.");
                 return;
             }
 
-            rooms.get(splitedCommand[1]).banUser(splitedCommand[2]);
+            room.banMember(username);
+            
+            sendCommand("BANIDO_DA_SALA " + roomName);
         }
 
         // Método que encaminha as mensagens para os membros da sala.
-        private void handleSendCommand(String[] splitedCommand) {
+        private void handleSendMessage(String[] splitedCommand) {
             if (splitedCommand.length < 3) {
                 sendCommand("ERRO Argumentos faltando em ENVIAR_MENSAGEM!");
                 return;
@@ -612,7 +605,7 @@ public class Server {
                 message = message.concat(" " + splitedCommand[i]);
             }
 
-            room.sendCommandForMembers(this.username, message);
+            room.sendMessageForMembers(this.username, message);
         }
 
 
