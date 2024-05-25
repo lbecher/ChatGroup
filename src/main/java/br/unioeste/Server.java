@@ -333,7 +333,7 @@ public class Server {
             }
         }
 
-        
+
 
         // Método que registra o usuário no servidor.
         public void registerClient() throws IOException {
