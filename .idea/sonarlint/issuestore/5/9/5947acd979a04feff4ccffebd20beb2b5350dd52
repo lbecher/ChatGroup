@@ -1,8 +1,37 @@
 
+{
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ªîä‰üÿÿÿÿ8ëìÀÆù1
+v
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(®Ôó§8ëìÀÆù1
+{
+java:S2293K"YReplace the type specification in this constructor call with the diamond operator ("<>").(û¯’øÿÿÿÿ8ììÀÆù1
+m	java:S117J"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ÿ€Ÿ8íìÀÆù1
+r	java:S117p"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(±ğˆüÿÿÿÿ8íìÀÆù1
+s	java:S117¦"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÕùÑıÿÿÿÿ8íìÀÆù1
+s	java:S117Ô"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÕùÑıÿÿÿÿ8îìÀÆù1
+s	java:S117ñ"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(à¦îşÿÿÿÿ8îìÀÆù1
+n	java:S117ò"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶¬œé8îìÀÆù1
+n	java:S117†"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¸¶‘Î8îìÀÆù1
+n	java:S117Œ"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶¬œé8îìÀÆù1
+n	java:S117¤"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(­Û 8îìÀÆù1
+n	java:S117¾"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¡à€ğ8îìÀÆù1
+n	java:S117É"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÂëåÌ8îìÀÆù1
 l
-java:S2095%"JUse try-with-resources or close this "ServerSocket" in a "finally" clause.(ã½Üãøÿÿÿÿ8¿×”¸÷1
-G	java:S106"+Replace this use of System.out by a logger.(ƒæ8È×”¸÷1
-L	java:S106_"+Replace this use of System.out by a logger.(“—‡Œşÿÿÿÿ8ß×”¸÷1
-G	java:S106f"+Replace this use of System.out by a logger.(Â•ï8ã×”¸÷1
-‰
-java:S1130}"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(´•¾Ñ8ç×”¸÷1
+java:S2095!"JUse try-with-resources or close this "ServerSocket" in a "finally" clause.(ã½Üãøÿÿÿÿ8àíÀÆù1
+G	java:S1064"+Replace this use of System.out by a logger.(ßœÔá8ğíÀÆù1
+
+java:S11308"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(–ö–ÿÿÿÿÿ8ñíÀÆù1
+u	java:S116D"TRename this field "room_name" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÁÂèøÿÿÿÿ8ñíÀÆù1
+q	java:S116G"URename this field "is_private" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›£®Ô8ñíÀÆù1
+J
+java:S1125l"(Remove the unnecessary boolean literals.(„¢Àşÿÿÿÿ8öíÀÆù1
+[
+java:S1117s"9Rename "admin" which hides the field declared at line 69.(ºÛ¬Üÿÿÿÿÿ8÷íÀÆù1
+`
+java:S1117Ú"=Rename "username" which hides the field declared at line 137.(˜ƒ²Ğşÿÿÿÿ8ƒîÀÆù1
+
+java:S2175û"aA "ConcurrentHashMap<String, ClientHandler>" cannot contain a "ClientHandler" in a "String" type.(¯¡Àû8×¸ÇÆù1
+Š
+java:S1130„"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(´•¾Ñ8Ù¸ÇÆù1
+H
+java:S33988"&Move this method into "ClientHandler".(–ö–ÿÿÿÿÿ8ŸîÀÆù1
