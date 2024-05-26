@@ -256,9 +256,9 @@ public class Server {
                 registerClient();
 
                 // Criptografa a conexão entre o cliente e o servidor.
-                /*if (!authenticateClient()) {
+                if (!authenticateClient()) {
                     delete();
-                }*/
+                }
 
                 while (true) {
                     String command = recieveCommand();

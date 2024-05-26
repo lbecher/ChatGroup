@@ -30,9 +30,9 @@ public class Client extends Crypt {
             
             registerClient();
 
-            /*if (!authenticateClient()) {
+            if (!authenticateClient()) {
                 return;
-            }*/
+            }
 
             while (true) {
                 String command = recieveCommand();
@@ -80,6 +80,7 @@ public class Client extends Crypt {
             String command = recieveCommand();
 
             if (command.equals("REGISTRO_OK")) {
+                clientLog("REGISTRO_OK");
                 break;
             }
         }
