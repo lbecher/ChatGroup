@@ -7,16 +7,10 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PublicKey;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 // CLASSE DO SERVIDOR.
 public class Server {
@@ -40,7 +34,7 @@ public class Server {
 
         try {
             // Inicializa o soquete do servidor.
-            ServerSocket serverSocket = new ServerSocket(this.port);
+            ServerSocket serverSocket = new ServerSocket(port);
             serverLog("O servidor está rodando e aguardando por conexões.");
 
             // Enquanto o servidor estiver rodando, aguarda novas conexões serem identificadas.
@@ -64,7 +58,7 @@ public class Server {
     }
 
     // Método que verifica se o nome de usuário já esta sendo utilizado.
-    private static boolean isUsernameTaken(String username) throws IOException {
+    private static boolean isUsernameTaken(String username) {
         return clients.containsKey(username);
     }
     
@@ -239,9 +233,6 @@ public class Server {
         private KeyPair keyPair;   // Par de chaves.
         private SecretKey aesKey;  // Chave do AES.
 
-
-
-        // Construtor da classe ClientHandler.
         public ClientHandler(Socket socket) {
             this.socket = socket;
             this.username = null;
@@ -311,7 +302,7 @@ public class Server {
                             break;
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -320,9 +311,9 @@ public class Server {
 
         private void delete() {
             try {
-                socket.close();
                 in.close();
                 out.close();
+                socket.close();
                 clients.remove(username);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -332,7 +323,7 @@ public class Server {
 
 
         // Método que recebe as streams de comandos do cliente.
-        private String recieveCommand() throws IOException {
+        private String recieveCommand() throws Exception {
             String command = in.readLine();
             if (aesKey != null) {
                 try {
@@ -361,7 +352,7 @@ public class Server {
 
 
         // Método que registra o usuário no servidor.
-        public void registerClient() throws IOException {
+        public void registerClient() throws Exception {
             // Permanece nesse método até obter um nome de usuário válid ou a conexão ser fechada.
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
@@ -398,7 +389,7 @@ public class Server {
         }
 
         // Método que criar uma conexão criptografada entre o cliente e o servidor.
-        public boolean authenticateClient() throws IOException {
+        public boolean authenticateClient() throws Exception {
             String command = recieveCommand();
             String[] splitedCommand = command.split(" ");
 

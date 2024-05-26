@@ -6,15 +6,22 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Crypt {
+    protected SecretKey generateAesKey() throws Exception {
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256);
+        return keyGen.generateKey();
+    }
+
     protected KeyPair generateKeyPair() throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(1024);
         return keyPairGenerator.generateKeyPair();
-    } 
+    }
 
     protected String decodePublicKeyBase64(String publicKeyBase64) {
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
@@ -34,10 +41,10 @@ public class Crypt {
         return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
     }
 
-    protected String encryptRsaBase64(String aesKey, PublicKey publicKey) throws Exception {
+    protected String encryptRsaBase64(SecretKey aesKey, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] encryptedAesKey = cipher.doFinal(aesKey.getBytes());
+        byte[] encryptedAesKey = cipher.doFinal(aesKey.toString().getBytes());
         return Base64.getEncoder().encodeToString(encryptedAesKey);
     }
 

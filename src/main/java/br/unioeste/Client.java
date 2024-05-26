@@ -62,10 +62,27 @@ public class Client extends Crypt {
     }
 
     private boolean authenticateClient() throws Exception {
+        sendCommand("AUTENTICACAO " + username);
+
+        String command = recieveCommand();
+        String[] splitedCommand = command.split(" ");
+
+        if (splitedCommand.length != 2) {
+            handleError("Comando inválido ou com número errado de argumentos!");
+            return false;
+        }
+
+        if (!splitedCommand[0].equals("CHAVE_PUBLICA")) {
+            handleError("Comando inesperado!");
+            return false;
+        }
+
+        aesKey = generateAesKey();
+        String encryptedAesKeyBase64 = encryptRsaBase64(aesKey, publicKey);
+        sendCommand("CHAVE_SIMETRICA " + encryptedAesKeyBase64);
+
         return true;
-
     }
-
 
 
     // Método que recebe as streams de comandos do servidor.
