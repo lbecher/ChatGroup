@@ -6,14 +6,17 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 // CLASSE DO SERVIDOR.
 public class Server {
@@ -233,7 +236,8 @@ public class Server {
         private Socket socket;     // Socket do usuário.
         private PrintWriter out;   // Buffer de saída do usuário.
         private BufferedReader in; // Buffer de saída do usuário.
-        private KeyPair keyPair;   // Senha do usuário.
+        private KeyPair keyPair;   // Par de chaves.
+        private SecretKey aesKey;  // Chave do AES.
 
 
 
@@ -258,10 +262,12 @@ public class Server {
         public void run() {
             try {
                 // Registra o socket e nome de usuário no hashmap clients.
-                this.registerClient();
+                registerClient();
 
                 // Criptografa a conexão entre o cliente e o servidor.
-                //this.authenticateClient();
+                if (!authenticateClient()) {
+                    delete();
+                }
 
                 while (true) {
                     String command = recieveCommand();
@@ -312,13 +318,43 @@ public class Server {
 
 
 
+        private void delete() {
+            try {
+                socket.close();
+                in.close();
+                out.close();
+                clients.remove(username);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+
+
         // Método que recebe as streams de comandos do servidor.
         private String recieveCommand() throws IOException {
-            return in.readLine();
+            String command = in.readLine();
+            if (aesKey != null) {
+                try {
+                    command = decryptAes(command);
+                } catch (Exception e) {
+                    sendCommand("ERRO Erro ao descriptografar o comando recebido!");
+                    e.printStackTrace();
+                }
+            }
+            return command;
         }
 
         // Método que envia as streams dos comandos para cliente.
         private void sendCommand(String command) {
+            if (aesKey != null) {
+                try {
+                    command = encryptAes(command);
+                } catch (Exception e) {
+                    out.println("ERRO Erro ao criptografar o comando enviado!");
+                    e.printStackTrace();
+                }
+            }
             out.println(command);
         }
 
@@ -377,17 +413,30 @@ public class Server {
             }
 
             try {
-                this.generateKeyPair();
-            } catch (NoSuchAlgorithmException e) {
+                generateKeyPair();
+            } catch (Exception e) {
                 sendCommand("ERRO Erro no servidor!");
-                serverLog(e.toString());
+                e.printStackTrace();
                 return false;
             }
 
-            String publicKey = this.getPublicKey();
-            sendCommand("CHAVE_PUBLICA " + this.encodeBase64(publicKey));
+            String publicKeyBase64 = getPublicKeyBase64();
+            sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
-            // Falta coisas aqui
+            command = recieveCommand();
+            splitedCommand = command.split(" ");
+
+            String encryptedAesKeyBase64 = splitedCommand[1];
+
+            try {
+                this.aesKey = decryptRsaBase64(encryptedAesKeyBase64);
+            } catch (Exception e) {
+                sendCommand("ERRO Erro ao descriptografar chave simétrica!");
+                e.printStackTrace();
+                return false;
+            }
+
+            sendCommand("AUTENTICACAO_OK");
 
             return true;
         }
@@ -609,26 +658,35 @@ public class Server {
 
 
 
-        private void generateKeyPair() throws NoSuchAlgorithmException {
+        private void generateKeyPair() throws Exception {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(1024);
             this.keyPair = keyPairGenerator.generateKeyPair();
         }
-        private String getPublicKey() {
-            Key publicKey = keyPair.getPublic();
-            return publicKey.toString();
+        private String getPublicKeyBase64() {
+            PublicKey publicKey = this.keyPair.getPublic();
+            byte[] publicKeyBytes = publicKey.toString().getBytes();
+            return Base64.getEncoder().encodeToString(publicKeyBytes);
         }
-        private String getPrivateKey() {
-            Key privateKey = keyPair.getPrivate();
-            return privateKey.toString();
+        private SecretKey decryptRsaBase64(String encryptedAesKeyBase64) throws Exception {
+            byte[] encryptedKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.DECRYPT_MODE, this.keyPair.getPrivate());
+            byte[] decryptedKey = cipher.doFinal(encryptedKey);
+            return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
         }
-        private String decodeBase64(String string) {
+        private String encryptAes(String string) throws Exception {
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, this.aesKey);
+            byte[] encryptedBytes = cipher.doFinal(string.getBytes());
+            return Base64.getEncoder().encodeToString(encryptedBytes);
+        }
+        private String decryptAes(String string) throws Exception {
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, this.aesKey);
             byte[] decodedBytes = Base64.getDecoder().decode(string);
-            return new String(decodedBytes);
-        }
-        private String encodeBase64(String string) {
-            byte[] stringBytes = string.getBytes();
-            return Base64.getEncoder().encodeToString(stringBytes);
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+            return new String(decryptedBytes);
         }
     }
 }
