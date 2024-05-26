@@ -21,8 +21,8 @@ public class Main {
             String servidor_url = args[1];
 
             // Criar uma instância do cliente e executa.
-            Cliente cliente = new Cliente(servidor_url);
-            cliente.run();
+            Client client = new Client(servidor_url);
+            client.run();
         }
         else {
             Main.help();

@@ -231,7 +231,7 @@ public class Server {
 
 
     // CLASSE PARA OS CLIENTES CONECTADOS.
-    private static class ClientHandler implements Runnable {
+    private static class ClientHandler extends Crypt implements Runnable {
         private String username;   // Nome do usuário.
         private Socket socket;     // Socket do usuário.
         private PrintWriter out;   // Buffer de saída do usuário.
@@ -331,12 +331,12 @@ public class Server {
 
 
 
-        // Método que recebe as streams de comandos do servidor.
+        // Método que recebe as streams de comandos do cliente.
         private String recieveCommand() throws IOException {
             String command = in.readLine();
             if (aesKey != null) {
                 try {
-                    command = decryptAes(command);
+                    command = decryptAes(command, aesKey);
                 } catch (Exception e) {
                     sendCommand("ERRO Erro ao descriptografar o comando recebido!");
                     e.printStackTrace();
@@ -349,7 +349,7 @@ public class Server {
         private void sendCommand(String command) {
             if (aesKey != null) {
                 try {
-                    command = encryptAes(command);
+                    command = encryptAes(command, aesKey);
                 } catch (Exception e) {
                     out.println("ERRO Erro ao criptografar o comando enviado!");
                     e.printStackTrace();
@@ -420,7 +420,7 @@ public class Server {
                 return false;
             }
 
-            String publicKeyBase64 = getPublicKeyBase64();
+            String publicKeyBase64 = encodePublicKeyBase64(keyPair.getPublic());
             sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
             command = recieveCommand();
@@ -429,7 +429,7 @@ public class Server {
             String encryptedAesKeyBase64 = splitedCommand[1];
 
             try {
-                this.aesKey = decryptRsaBase64(encryptedAesKeyBase64);
+                this.aesKey = decryptRsaBase64(encryptedAesKeyBase64, keyPair.getPrivate());
             } catch (Exception e) {
                 sendCommand("ERRO Erro ao descriptografar chave simétrica!");
                 e.printStackTrace();
@@ -653,40 +653,6 @@ public class Server {
             }
 
             room.sendMessageForMembers(this.username, message);
-        }
-
-
-
-
-        private void generateKeyPair() throws Exception {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(1024);
-            this.keyPair = keyPairGenerator.generateKeyPair();
-        }
-        private String getPublicKeyBase64() {
-            PublicKey publicKey = this.keyPair.getPublic();
-            byte[] publicKeyBytes = publicKey.toString().getBytes();
-            return Base64.getEncoder().encodeToString(publicKeyBytes);
-        }
-        private SecretKey decryptRsaBase64(String encryptedAesKeyBase64) throws Exception {
-            byte[] encryptedKey = Base64.getDecoder().decode(encryptedAesKeyBase64);
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.DECRYPT_MODE, this.keyPair.getPrivate());
-            byte[] decryptedKey = cipher.doFinal(encryptedKey);
-            return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
-        }
-        private String encryptAes(String string) throws Exception {
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, this.aesKey);
-            byte[] encryptedBytes = cipher.doFinal(string.getBytes());
-            return Base64.getEncoder().encodeToString(encryptedBytes);
-        }
-        private String decryptAes(String string) throws Exception {
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.DECRYPT_MODE, this.aesKey);
-            byte[] decodedBytes = Base64.getDecoder().decode(string);
-            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
-            return new String(decryptedBytes);
         }
     }
 }
