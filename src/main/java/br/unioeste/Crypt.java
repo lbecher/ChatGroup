@@ -1,11 +1,13 @@
 package br.unioeste;
 
 import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -46,10 +48,18 @@ public class Crypt {
         return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
     }
 
-    protected String encryptRsaBase64(SecretKey aesKey, PublicKey publicKey) throws Exception {
+    protected String encryptRsaBase64(SecretKey aesKey, String publicKeyBase64) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
+        PKCS8EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(publicKeyBytes);
+        RSAPublicKey rasPublicKey = (RSAPublicKey) keyFactory.generatePrivate(publicKeySpec);
+
         Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        cipher.init(Cipher.ENCRYPT_MODE, rasPublicKey);
         byte[] encryptedAesKey = cipher.doFinal(aesKey.toString().getBytes());
+
+        System.out.println("Aqui!");
+
         return Base64.getEncoder().encodeToString(encryptedAesKey);
     }
 

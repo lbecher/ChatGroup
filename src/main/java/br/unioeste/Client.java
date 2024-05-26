@@ -31,9 +31,9 @@ public class Client extends Crypt {
             
             registerClient();
 
-            if (!authenticateClient()) {
+            /*if (!authenticateClient()) {
                 return;
-            }
+            }*/
 
             while (true) {
                 String command = recieveCommand();
@@ -65,9 +65,25 @@ public class Client extends Crypt {
     }
 
     private void registerClient() throws Exception {
-        sendCommand("REGISTRO langris");
 
-        String command = recieveCommand();
+        /*
+         * O código desse método é provisório, feito para testes!
+         */
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        
+        while (true) {
+            System.out.println("Nome de usuário:");
+            String username = reader.readLine();
+
+            sendCommand("REGISTRO " + username);
+
+            String command = recieveCommand();
+
+            if (command.equals("REGISTRO_OK")) {
+                break;
+            }
+        }
     }
 
     private boolean authenticateClient() throws Exception {
@@ -87,10 +103,9 @@ public class Client extends Crypt {
         }
 
         String publicKeyBase64 = splitedCommand[1];
-        decodePublicKeyBase64(publicKeyBase64);
 
         aesKey = generateAesKey();
-        String encryptedAesKeyBase64 = encryptRsaBase64(aesKey, publicKey);
+        String encryptedAesKeyBase64 = encryptRsaBase64(aesKey, publicKeyBase64);
         sendCommand("CHAVE_SIMETRICA " + encryptedAesKeyBase64);
 
         return true;
