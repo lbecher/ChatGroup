@@ -5,6 +5,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.PublicKey;
+import javafx.application.Application;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.stage.Stage;
 import javax.crypto.SecretKey;
 
 public class Client extends Crypt {
@@ -78,10 +82,16 @@ public class Client extends Crypt {
             sendCommand("REGISTRO " + username);
 
             String command = receiveCommand();
+            String splitedCommand[] = command.split(" ", 1);
 
             if (command.equals("REGISTRO_OK")) {
-                clientLog("REGISTRO_OK");
                 break;
+            } 
+            else if (command.equals("ERRO")) {
+                handleError(splitedCommand[1]);
+            }
+            else {
+                handleError("Comando '" + splitedCommand[0] + "' inesperado!");
             }
         }
     }
@@ -124,6 +134,7 @@ public class Client extends Crypt {
     }
 
 
+
     // Método que recebe as streams de comandos do servidor.
     private String receiveCommand() throws Exception {
         String command = in.readLine();
@@ -158,8 +169,11 @@ public class Client extends Crypt {
 
 
     private void handleError(String error) {
-        // provisório, o ideal é isso aparecer na interface
-        clientLog("[ERRO REPORTADO PELO SERVIDOR] " + error);
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Erro");
+        alert.setHeaderText("Um erro foi reportado!");
+        alert.setContentText(error);
+        alert.showAndWait();
     }
 
 
