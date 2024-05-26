@@ -24,8 +24,8 @@ public class Server {
 
 
     // Construtor da classe servidor.
-    public Server(String port) {
-        this.port = Integer.parseInt(port);
+    public Server(int port) {
+        this.port = port;
     }
 
     // Método que inicializa o servidor.

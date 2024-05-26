@@ -1,19 +1,15 @@
 package br.unioeste;
 
 import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.Base64;
-
-import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 public class Client extends Crypt {
-    private String servidor_url;
+    private String server;
+    private int port;
 
     private String username;     // Nome do usuário.
     private Socket socket;       // Socket do usuário.
@@ -22,16 +18,19 @@ public class Client extends Crypt {
     private PublicKey publicKey; // Par de chaves.
     private SecretKey aesKey;    // Chave do AES.
 
-    public Client(String servidor_url) {
-        this.servidor_url = servidor_url;
+    public Client(String server, int port) {
+        this.server = server;
+        this.port = port;
     }
 
     public void run() {
         clientLog("Iniciando o cliente...");
 
         try {
+            startSocket();
+            
             registerClient();
-        
+
             if (!authenticateClient()) {
                 return;
             }
@@ -56,6 +55,14 @@ public class Client extends Crypt {
     }
 
 
+    private void startSocket() throws Exception {
+        socket = new Socket(server, port);
+
+        clientLog("Conectado ao servidor!");
+
+        out = new PrintWriter(socket.getOutputStream(), true); 
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    }
 
     private void registerClient() {
 
@@ -92,7 +99,7 @@ public class Client extends Crypt {
             try {
                 command = decryptAes(command, aesKey);
             } catch (Exception e) {
-                handleError("ERRO Erro ao descriptografar o comando recebido!");
+                handleError("Erro ao descriptografar o comando recebido!");
                 e.printStackTrace();
             }
         }
