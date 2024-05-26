@@ -65,7 +65,7 @@ public class Client extends Crypt {
     }
 
     private void registerClient() throws Exception {
-        sendCommand("REGISTRO asta");
+        sendCommand("REGISTRO langris");
 
         String command = recieveCommand();
     }
@@ -87,7 +87,7 @@ public class Client extends Crypt {
         }
 
         String publicKeyBase64 = splitedCommand[1];
-        publicKey = decodePublicKeyBase64(publicKeyBase64);
+        decodePublicKeyBase64(publicKeyBase64);
 
         aesKey = generateAesKey();
         String encryptedAesKeyBase64 = encryptRsaBase64(aesKey, publicKey);

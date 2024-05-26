@@ -1,11 +1,11 @@
 package br.unioeste;
 
-import java.security.KeyFactory;
+import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -25,23 +25,17 @@ public class Crypt {
         return keyPairGenerator.generateKeyPair();
     }
 
-    public PublicKey decodePublicKeyBase64(String publicKeyBase64) throws Exception {
-        // Decodifica a chave pública em Base64 para bytes
+    protected String decodePublicKeyBase64(String publicKeyBase64) {
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
-
-        // Cria um X509EncodedKeySpec a partir dos bytes da chave pública
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-
-        // Cria um KeyFactory para o algoritmo especificado (por exemplo, RSA)
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-        // Gera um objeto PublicKey a partir do X509EncodedKeySpec
-        return keyFactory.generatePublic(keySpec);
+        String publicKeyString = new String(publicKeyBytes);
+        System.out.println(publicKeyString);
+        return publicKeyString;
     }
 
-    protected String encodePublicKeyBase64(PublicKey publicKey) {
-        byte[] publicKeyBytes = publicKey.toString().getBytes();
-        return Base64.getEncoder().encodeToString(publicKeyBytes);
+    protected String encodePublicKeyBase64(PublicKey publicKey) throws Exception {
+        RSAPublicKey p = (RSAPublicKey) publicKey;
+        System.out.println(p.toString());
+        return Base64.getEncoder().encodeToString(p.getEncoded());
     }
 
     protected SecretKey decryptRsaBase64(String encryptedAesKeyBase64, PrivateKey privateKey) throws Exception {
