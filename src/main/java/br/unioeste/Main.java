@@ -22,7 +22,7 @@ public class Main {
             String[] splited_servidor_url = servidor_url.split(":", 2);
 
             String server = splited_servidor_url[0];
-            int port = Integer.parseInt(args[1]);
+            int port = Integer.parseInt(splited_servidor_url[1]);
 
             // Criar uma instância do cliente e executa.
             Client client = new Client(server, port);
