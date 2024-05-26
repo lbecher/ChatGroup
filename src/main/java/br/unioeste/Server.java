@@ -327,7 +327,9 @@ public class Server {
             String command = in.readLine();
             if (aesKey != null) {
                 try {
-                    command = decryptAes(command, aesKey);
+                    byte[] bytes = decodeBase64(command);
+                    bytes = decryptAes(bytes, aesKey);
+                    command = new String(bytes);
                 } catch (Exception e) {
                     sendCommand("ERRO Erro ao descriptografar o comando recebido!");
                     e.printStackTrace();
@@ -340,7 +342,9 @@ public class Server {
         private void sendCommand(String command) {
             if (aesKey != null) {
                 try {
-                    command = encryptAes(command, aesKey);
+                    command = encodeBase64(command.getBytes());
+                    byte[] bytes = encryptAes(command.getBytes(), aesKey);
+                    command = new String(bytes);
                 } catch (Exception e) {
                     out.println("ERRO Erro ao criptografar o comando enviado!");
                     e.printStackTrace();
@@ -411,17 +415,18 @@ public class Server {
                 return false;
             }
 
-            String publicKeyBase64 = encodePublicKeyBase64(keyPair.getPublic());
+            String publicKeyBase64 = encodeBase64(keyPair.getPublic().getEncoded());
             sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
             command = recieveCommand();
-            serverLog(command);
             splitedCommand = command.split(" ");
 
             String encryptedAesKeyBase64 = splitedCommand[1];
 
             try {
-                aesKey = decryptRsaBase64(encryptedAesKeyBase64, keyPair.getPrivate());
+                byte[] encryptedAesKey = decodeBase64(encryptedAesKeyBase64);
+                byte[] decrypyedAesKey = decryptRsa(encryptedAesKey, keyPair.getPrivate());
+                aesKey = secretKeyKeyFromBytes(decrypyedAesKey);
             } catch (Exception e) {
                 sendCommand("ERRO Erro ao descriptografar chave simétrica!");
                 e.printStackTrace();

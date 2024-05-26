@@ -15,7 +15,6 @@ public class Client extends Crypt {
     private Socket socket;       // Socket do usuário.
     private PrintWriter out;     // Buffer de saída do usuário.
     private BufferedReader in;   // Buffer de saída do usuário.
-    private PublicKey publicKey; // Par de chaves.
     private SecretKey aesKey;    // Chave do AES.
 
     public Client(String server, int port) {
@@ -103,10 +102,14 @@ public class Client extends Crypt {
         }
 
         String publicKeyBase64 = splitedCommand[1];
+        byte[] publicKeyBytes = decodeBase64(publicKeyBase64);
+        PublicKey publicKey = publicKeyFromBytes(publicKeyBytes);
 
         aesKey = generateAesKey();
-        String encryptedAesKeyBase64 = encryptRsaBase64(aesKey, publicKeyBase64);
-        sendCommand("CHAVE_SIMETRICA " + encryptedAesKeyBase64);
+
+        byte[] encryptedAesKey = encryptRsa(aesKey.getEncoded(), publicKey);
+        String encodedAesKey = encodeBase64(encryptedAesKey);
+        sendCommand("CHAVE_SIMETRICA " + encodedAesKey);
 
         return true;
     }
@@ -117,7 +120,9 @@ public class Client extends Crypt {
         String command = in.readLine();
         if (aesKey != null) {
             try {
-                command = decryptAes(command, aesKey);
+                byte[] bytes = decodeBase64(command);
+                bytes = decryptAes(bytes, aesKey);
+                command = new String(bytes);
             } catch (Exception e) {
                 handleError("Erro ao descriptografar o comando recebido!");
                 e.printStackTrace();
@@ -130,7 +135,9 @@ public class Client extends Crypt {
     private void sendCommand(String command) {
         if (aesKey != null) {
             try {
-                command = encryptAes(command, aesKey);
+                command = encodeBase64(command.getBytes());
+                byte[] bytes = encryptAes(command.getBytes(), aesKey);
+                command = new String(bytes);
             } catch (Exception e) {
                 handleError("Erro ao criptografar o comando enviado!");
                 e.printStackTrace();
