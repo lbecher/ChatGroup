@@ -39,7 +39,7 @@ public class Crypt {
     }
 
     protected byte[] decodeBase64(String string) {
-        byte[] bytes =  Base64.getDecoder().decode(string);
+        byte[] bytes = Base64.getDecoder().decode(string);
         return bytes;
     }
 

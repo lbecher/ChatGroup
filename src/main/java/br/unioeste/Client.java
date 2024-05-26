@@ -106,11 +106,19 @@ public class Client extends Crypt {
         byte[] publicKeyBytes = decodeBase64(publicKeyBase64);
         PublicKey publicKey = publicKeyFromBytes(publicKeyBytes);
 
-        aesKey = generateAesKey();
+        clientLog("Chave pública recebida!");
 
-        byte[] encryptedAesKey = encryptRsa(aesKey.getEncoded(), publicKey);
+        SecretKey secretKey = generateAesKey();
+
+        clientLog("Chave simétrica gerada!");
+
+        byte[] encryptedAesKey = encryptRsa(secretKey.getEncoded(), publicKey);
         String encodedAesKey = encodeBase64(encryptedAesKey);
         sendCommand("CHAVE_SIMETRICA " + encodedAesKey);
+
+        clientLog("Chave simétrica enviada!");
+
+        aesKey = secretKey;
 
         return true;
     }
@@ -151,7 +159,7 @@ public class Client extends Crypt {
 
     private void handleError(String error) {
         // provisório, o ideal é isso aparecer na interface
-        clientLog(error);
+        clientLog("[ERRO REPORTADO PELO SERVIDOR] " + error);
     }
 
 
