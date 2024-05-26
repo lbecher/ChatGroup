@@ -28,17 +28,6 @@ public class Main {
             Client client = new Client(server, port);
             client.run();
         }
-        else if (argumento.equals("--ambos") || argumento.equals("-a")) {
-            int port = Integer.parseInt(args[1]);
-
-            // Criar uma instância do servidor e executa.
-            Server server = new Server(port);
-            server.run();
-
-            // Criar uma instância do cliente e executa.
-            Client client = new Client("localhost", port);
-            client.run();
-        }
         else {
             Main.help();
             return;
