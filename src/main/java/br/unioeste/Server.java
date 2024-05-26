@@ -22,11 +22,11 @@ public class Server {
     private static final ConcurrentHashMap<String, ClientHandler> clients = new ConcurrentHashMap<String, ClientHandler>();
     private static final ConcurrentHashMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
 
-
-    // Construtor da classe servidor.
     public Server(int port) {
         this.port = port;
     }
+
+    
 
     // Método que inicializa o servidor.
     public void run() {
@@ -404,7 +404,7 @@ public class Server {
             }
 
             try {
-                generateKeyPair();
+                keyPair = generateKeyPair();
             } catch (Exception e) {
                 sendCommand("ERRO Erro no servidor!");
                 e.printStackTrace();
@@ -415,19 +415,18 @@ public class Server {
             sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
             command = recieveCommand();
+            serverLog(command);
             splitedCommand = command.split(" ");
 
             String encryptedAesKeyBase64 = splitedCommand[1];
 
             try {
-                this.aesKey = decryptRsaBase64(encryptedAesKeyBase64, keyPair.getPrivate());
+                aesKey = decryptRsaBase64(encryptedAesKeyBase64, keyPair.getPrivate());
             } catch (Exception e) {
                 sendCommand("ERRO Erro ao descriptografar chave simétrica!");
                 e.printStackTrace();
                 return false;
             }
-
-            sendCommand("AUTENTICACAO_OK");
 
             return true;
         }
