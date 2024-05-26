@@ -35,7 +35,7 @@ public class Client extends Crypt {
             }
 
             while (true) {
-                String command = recieveCommand();
+                String command = receiveCommand();
                 String[] splitedCommand = command.split(" ", 1);
 
                 switch (splitedCommand[0]) {
@@ -77,7 +77,7 @@ public class Client extends Crypt {
 
             sendCommand("REGISTRO " + username);
 
-            String command = recieveCommand();
+            String command = receiveCommand();
 
             if (command.equals("REGISTRO_OK")) {
                 clientLog("REGISTRO_OK");
@@ -89,7 +89,7 @@ public class Client extends Crypt {
     private boolean authenticateClient() throws Exception {
         sendCommand("AUTENTICACAO " + username);
 
-        String command = recieveCommand();
+        String command = receiveCommand();
         String[] splitedCommand = command.split(" ");
 
         if (splitedCommand.length != 2) {
@@ -125,7 +125,7 @@ public class Client extends Crypt {
 
 
     // Método que recebe as streams de comandos do servidor.
-    private String recieveCommand() throws Exception {
+    private String receiveCommand() throws Exception {
         String command = in.readLine();
         if (aesKey != null) {
             try {

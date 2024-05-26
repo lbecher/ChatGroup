@@ -261,7 +261,7 @@ public class Server {
                 }
 
                 while (true) {
-                    String command = recieveCommand();
+                    String command = receiveCommand();
                     String[] splitedCommand = command.split(" ");
 
                     switch (splitedCommand[0]) {
@@ -323,7 +323,7 @@ public class Server {
 
 
         // Método que recebe as streams de comandos do cliente.
-        private String recieveCommand() throws Exception {
+        private String receiveCommand() throws Exception {
             String command = in.readLine();
             if (aesKey != null) {
                 try {
@@ -360,7 +360,7 @@ public class Server {
             // Permanece nesse método até obter um nome de usuário válid ou a conexão ser fechada.
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
-                String command = recieveCommand();
+                String command = receiveCommand();
                 String[] splitedCommand = command.split(" ");
 
                 // Valida quantidade de argumentos.
@@ -394,7 +394,7 @@ public class Server {
 
         // Método que criar uma conexão criptografada entre o cliente e o servidor.
         public boolean authenticateClient() throws Exception {
-            String command = recieveCommand();
+            String command = receiveCommand();
             String[] splitedCommand = command.split(" ");
 
             if (splitedCommand.length != 2) {
@@ -418,7 +418,7 @@ public class Server {
             String publicKeyBase64 = encodeBase64(keyPair.getPublic().getEncoded());
             sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
-            command = recieveCommand();
+            command = receiveCommand();
             splitedCommand = command.split(" ");
 
             String encryptedAesKeyBase64 = splitedCommand[1];
