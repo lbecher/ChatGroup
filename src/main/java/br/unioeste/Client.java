@@ -64,8 +64,10 @@ public class Client extends Crypt {
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
-    private void registerClient() {
+    private void registerClient() throws Exception {
+        sendCommand("REGISTRO asta");
 
+        String command = recieveCommand();
     }
 
     private boolean authenticateClient() throws Exception {
@@ -83,6 +85,9 @@ public class Client extends Crypt {
             handleError("Comando inesperado!");
             return false;
         }
+
+        String publicKeyBase64 = splitedCommand[1];
+        publicKey = decodePublicKeyBase64(publicKeyBase64);
 
         aesKey = generateAesKey();
         String encryptedAesKeyBase64 = encryptRsaBase64(aesKey, publicKey);

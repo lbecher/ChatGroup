@@ -1,9 +1,11 @@
 package br.unioeste;
 
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -23,9 +25,18 @@ public class Crypt {
         return keyPairGenerator.generateKeyPair();
     }
 
-    protected String decodePublicKeyBase64(String publicKeyBase64) {
+    public PublicKey decodePublicKeyBase64(String publicKeyBase64) throws Exception {
+        // Decodifica a chave pública em Base64 para bytes
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
-        return new String(publicKeyBytes);
+
+        // Cria um X509EncodedKeySpec a partir dos bytes da chave pública
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+
+        // Cria um KeyFactory para o algoritmo especificado (por exemplo, RSA)
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+        // Gera um objeto PublicKey a partir do X509EncodedKeySpec
+        return keyFactory.generatePublic(keySpec);
     }
 
     protected String encodePublicKeyBase64(PublicKey publicKey) {
