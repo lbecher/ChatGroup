@@ -19,10 +19,10 @@ public class Main {
         }
         else if (argumento.equals("--cliente") || argumento.equals("-c")) {
             String servidor_url = args[1];
-            String[] splited_servidor_url = servidor_url.split(":", 2);
+            String[] splitted_servidor_url = servidor_url.split(":", 2);
 
-            String server = splited_servidor_url[0];
-            int port = Integer.parseInt(splited_servidor_url[1]);
+            String server = splitted_servidor_url[0];
+            int port = Integer.parseInt(splitted_servidor_url[1]);
 
             // Criar uma instância do cliente e executa.
             Client client = new Client(server, port);

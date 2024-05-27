@@ -1,10 +1,12 @@
 package br.unioeste;
 
+import com.google.common.hash.Hashing;
+
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import javax.crypto.SecretKey;
 
@@ -39,14 +41,24 @@ public class Client extends Crypt {
             }
 
             /*
-             * O código a partir é provisório, feito para testes!
+             * O código a partir daqui é provisório, feito para testes!
              */
 
             // Thread para receber mensagens do servidor
             Thread serverReaderThread = new Thread(() -> {
                 try {
                     while (true) {
-                        System.out.println(receiveCommand());
+                        String commmand = receiveCommand();
+                        String[] splittedCommmand = commmand.split(" ");
+
+                        switch (splittedCommmand[0]) {
+                            case "ERRO":
+                                handleError("[SERVIDOR] " + commmand.split(" ", 2)[1]);
+                                break;
+                            default:
+                                clientLog(commmand);
+                                break;
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -59,9 +71,45 @@ public class Client extends Crypt {
                 try {
                     String userInput;
                     while ((userInput = this.userInput.readLine()) != null) {
-                        sendCommand(userInput);
+                        String[] splittedUserInput = userInput.split(" ");
+
+                        switch (splittedUserInput[0]) {
+                            case "CRIAR_SALA":
+                                if (splittedUserInput.length == 4 && splittedUserInput[1].equals("PRIVADA")) {
+                                    String hashedPassword = Hashing.sha256()
+                                        .hashString(splittedUserInput[3], StandardCharsets.UTF_8)
+                                        .toString();
+                                    sendCommand("CRIAR_SALA PRIVADA " + splittedUserInput[2] + " " + hashedPassword);
+                                }
+                                else if (splittedUserInput.length == 3 && splittedUserInput[1].equals("PUBLICA")) {
+                                    sendCommand("CRIAR_SALA PUBLICA " + splittedUserInput[2]);
+                                }
+                                else {
+                                    handleError("O comando CRIAR_SALA está errado!");
+                                }
+                                break;
+                            
+                            case "ENTRAR_SALA":
+                                if (splittedUserInput.length == 3) {
+                                    String hashedPassword = Hashing.sha256()
+                                        .hashString(splittedUserInput[2], StandardCharsets.UTF_8)
+                                        .toString();
+                                    sendCommand("ENTRAR_SALA " + splittedUserInput[1] + " " + hashedPassword);
+                                }
+                                else if (splittedUserInput.length == 2) {
+                                    sendCommand(userInput);
+                                }
+                                else {
+                                    handleError("O comando ENTRAR_SALA está errado!");
+                                }
+                                break;
+
+                            default:
+                                sendCommand(userInput);
+                                break;
+                        }
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
@@ -101,9 +149,9 @@ public class Client extends Crypt {
                 clientLog("REGISTRO_OK");
                 break;
             }
-            else if (command.equals("ERRO")) {
-                String error = command.split(" ", 1)[1];
-                handleError(error);
+            else if (command.split(" ", 2)[0].equals("ERRO")) {
+                String error = command.split(" ", 2)[1];
+                handleError("[SERVIDOR] " + error);
             }
             else {
                 handleError("Comando inesperado durante o registro!");
@@ -115,19 +163,19 @@ public class Client extends Crypt {
         sendCommand("AUTENTICACAO " + username);
 
         String command = receiveCommand();
-        String[] splitedCommand = command.split(" ");
+        String[] splittedCommand = command.split(" ");
 
-        if (splitedCommand.length != 2) {
+        if (splittedCommand.length != 2) {
             handleError("Comando inválido ou com número errado de argumentos!");
             return false;
         }
 
-        if (!splitedCommand[0].equals("CHAVE_PUBLICA")) {
+        if (!splittedCommand[0].equals("CHAVE_PUBLICA")) {
             handleError("Comando inesperado!");
             return false;
         }
 
-        String publicKeyBase64 = splitedCommand[1];
+        String publicKeyBase64 = splittedCommand[1];
         byte[] publicKeyBytes = decodeBase64(publicKeyBase64);
         PublicKey publicKey = publicKeyFromBytes(publicKeyBytes);
 

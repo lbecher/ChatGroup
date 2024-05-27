@@ -22,9 +22,7 @@ public class Crypt {
     protected PublicKey publicKeyFromBytes(byte[] bytes) throws Exception {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(bytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-        PublicKey publicKey = keyFactory.generatePublic(keySpec);
-        return publicKey;
+        return keyFactory.generatePublic(keySpec);
     }
 
     protected SecretKey secretKeyKeyFromBytes(byte[] bytes) throws Exception {
@@ -49,32 +47,24 @@ public class Crypt {
     protected byte[] decryptRsa(byte[] bytes, PrivateKey privateKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-        byte[] decryptedBytes = cipher.doFinal(bytes);
-        return decryptedBytes;
+        return cipher.doFinal(bytes);
     }
 
     protected byte[] encryptRsa(byte[] bytes, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-
-        byte[] encryptedBytes = cipher.doFinal(bytes);
-        return encryptedBytes;
+        return cipher.doFinal(bytes);
     }
 
     protected byte[] encryptAes(byte[] bytes, SecretKey aesKey) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-
-        byte[] encryptedBytes = cipher.doFinal(bytes);
-        return encryptedBytes;
+        return cipher.doFinal(bytes);
     }
 
     protected byte[] decryptAes(byte[] bytes, SecretKey aesKey) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.DECRYPT_MODE, aesKey);
-        
-        byte[] decryptedBytes = cipher.doFinal(bytes);
-        return decryptedBytes;
+        return cipher.doFinal(bytes);
     }
 }

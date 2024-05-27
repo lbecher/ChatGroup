@@ -262,39 +262,39 @@ public class Server {
 
                 while (true) {
                     String command = receiveCommand();
-                    String[] splitedCommand = command.split(" ");
+                    String[] splittedCommand = command.split(" ");
 
-                    switch (splitedCommand[0]) {
+                    switch (splittedCommand[0]) {
                         case "CRIAR_SALA":
                             // Lida com o restante do comando em outro método.
-                            handleRoomCreation(splitedCommand);
+                            handleRoomCreation(splittedCommand);
                             break;
                         
                         case "LISTAR_SALAS":
-                            handleListRooms(splitedCommand);
+                            handleListRooms(splittedCommand);
                             break;
                         
                         case "ENTRAR_SALA":
                             // Lida com o restante do comando em outro método.
-                            handleJoinRoom(splitedCommand);
+                            handleJoinRoom(splittedCommand);
                             break;
                         
                         case "SAIR_SALA":
                             // Lida com o restante do comando em outro método.
-                            handleExitRoom(splitedCommand);
+                            handleExitRoom(splittedCommand);
                             break;
                         
                         case "FECHAR_SALA":
-                            handleCloseRoom(splitedCommand);
+                            handleCloseRoom(splittedCommand);
                             break;
                         
                         case "BANIR_USUARIO":
-                            handleBanUser(splitedCommand);
+                            handleBanUser(splittedCommand);
                             break;
                         
                         case "ENVIAR_MENSAGEM":
                             // Lida com o restante do comando em outro método.
-                            handleSendMessage(splitedCommand);
+                            handleSendMessage(splittedCommand);
                             break;
                     
                         default:
@@ -361,15 +361,15 @@ public class Server {
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
                 String command = receiveCommand();
-                String[] splitedCommand = command.split(" ");
+                String[] splittedCommand = command.split(" ");
 
                 // Valida quantidade de argumentos.
-                if (splitedCommand.length == 2) {
-                    String action = splitedCommand[0];
+                if (splittedCommand.length == 2) {
+                    String action = splittedCommand[0];
 
                     // Valida o comando para registrar-se.
                     if (action.equals("REGISTRO")) {
-                        String username = splitedCommand[1];
+                        String username = splittedCommand[1];
 
                         // Valida disponibilidade do nome de usuário.
                         if (!isUsernameTaken(username)) {
@@ -395,14 +395,14 @@ public class Server {
         // Método que criar uma conexão criptografada entre o cliente e o servidor.
         public boolean authenticateClient() throws Exception {
             String command = receiveCommand();
-            String[] splitedCommand = command.split(" ");
+            String[] splittedCommand = command.split(" ");
 
-            if (splitedCommand.length != 2) {
+            if (splittedCommand.length != 2) {
                 sendCommand("ERRO Comando inválido ou com número errado de argumentos!");
                 return false;
             }
 
-            if (!splitedCommand[0].equals("AUTENTICACAO")) {
+            if (!splittedCommand[0].equals("AUTENTICACAO")) {
                 sendCommand("ERRO Comando inesperado!");
                 return false;
             }
@@ -419,9 +419,9 @@ public class Server {
             sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
             command = receiveCommand();
-            splitedCommand = command.split(" ");
+            splittedCommand = command.split(" ");
 
-            String encryptedAesKeyBase64 = splitedCommand[1];
+            String encryptedAesKeyBase64 = splittedCommand[1];
 
             try {
                 byte[] encryptedAesKey = decodeBase64(encryptedAesKeyBase64);
@@ -439,13 +439,13 @@ public class Server {
 
 
         // Método para criar uma sala.
-        private void handleRoomCreation(String[] splitedCommand) {
-            if (splitedCommand.length <= 2 || splitedCommand.length >= 5) {
-                sendCommand("ERRO Argumentos faltando em CRIAR_SALA!");
+        private void handleRoomCreation(String[] splittedCommand) {
+            if (splittedCommand.length <= 2 || splittedCommand.length >= 5) {
+                sendCommand("ERRO Argumentos faltando ou sobrando em CRIAR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[2];
+            String roomName = splittedCommand[2];
 
             if (rooms.containsKey(roomName)) {
                 sendCommand("ERRO Uma sala já existe com esse nome!");
@@ -455,19 +455,19 @@ public class Server {
             String hashedPassword = null;
             boolean isPrivate = false;
 
-            switch (splitedCommand[1]) {
+            switch (splittedCommand[1]) {
                 case "PUBLICA":
-                    if (splitedCommand.length != 3) {
+                    if (splittedCommand.length != 3) {
                         sendCommand("ERRO Argumentos demais em CRIAR_SALA!");
                     }
                     break;
 
                 case "PRIVADA":
-                    if (splitedCommand.length != 4) {
+                    if (splittedCommand.length != 4) {
                         sendCommand("ERRO Argumentos faltando em CRIAR_SALA!");
                         return;
                     }
-                    hashedPassword = splitedCommand[3];
+                    hashedPassword = splittedCommand[3];
                     isPrivate = true;
                     break;
 
@@ -483,8 +483,8 @@ public class Server {
         }
 
         // Método para listar todas as salas.
-        private void handleListRooms(String[] splitedCommand) {
-            if (splitedCommand.length != 1) {
+        private void handleListRooms(String[] splittedCommand) {
+            if (splittedCommand.length != 1) {
                 sendCommand("ERRO Argumentos inválidos para o comando LISTAR_SALAS");
             }
 
@@ -493,13 +493,13 @@ public class Server {
         }
 
         // Método que adiciona um membro na sala.
-        private void handleJoinRoom(String[] splitedCommand) {
-            if (splitedCommand.length < 2) {
+        private void handleJoinRoom(String[] splittedCommand) {
+            if (splittedCommand.length < 2) {
                 sendCommand("ERRO Argumentos faltando em ENTRAR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala " + roomName + " não existe!");
@@ -509,12 +509,12 @@ public class Server {
             Room room = rooms.get(roomName);
 
             if (room.isPrivate()) {
-                if (splitedCommand.length < 3) {
+                if (splittedCommand.length < 3) {
                     sendCommand("ERRO Não foi informado uma senha para entrar na sala privada " + roomName + "!");
                     return;
                 }
 
-                String hashedPassword = splitedCommand[2];
+                String hashedPassword = splittedCommand[2];
 
                 if (!room.validateHashedPassword(hashedPassword)) {
                     sendCommand("ERRO Senha incorreta!");
@@ -527,13 +527,13 @@ public class Server {
         }
 
         // Método para sair de uma sala.
-        private void handleExitRoom(String[] splitedCommand) {
-            if (splitedCommand.length != 2) {
+        private void handleExitRoom(String[] splittedCommand) {
+            if (splittedCommand.length != 2) {
                 sendCommand("ERRO Argumentos inválidos para o comando SAIR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala informada não existe!");
@@ -552,13 +552,13 @@ public class Server {
         }
 
         // Método que fecha uma sala.
-        private void handleCloseRoom(String[] splitedCommand) { 
-            if (splitedCommand.length < 2) {
+        private void handleCloseRoom(String[] splittedCommand) { 
+            if (splittedCommand.length < 2) {
                 sendCommand("ERRO Argumentos faltando em ENTRAR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala " + roomName + " não existe!");
@@ -579,15 +579,15 @@ public class Server {
         }
 
         // Método para banir um usuário de uma sala.
-        private void handleBanUser(String[] splitedCommand) {
+        private void handleBanUser(String[] splittedCommand) {
             // Verifica a quantidade de argumentos lidos.
-            if (splitedCommand.length != 3) {
+            if (splittedCommand.length != 3) {
                 sendCommand("ERRO Argumentos inválidos ou incompletos para o comando BANIR_USUARIO.");
                 return;
             }
 
-            String roomName = splitedCommand[1];
-            String username = splitedCommand[2];
+            String roomName = splittedCommand[1];
+            String username = splittedCommand[2];
 
             // Verifica se a sala existe.
             if (!rooms.containsKey(roomName)) {
@@ -621,13 +621,13 @@ public class Server {
         }
 
         // Método que encaminha as mensagens para os membros da sala.
-        private void handleSendMessage(String[] splitedCommand) {
-            if (splitedCommand.length < 3) {
+        private void handleSendMessage(String[] splittedCommand) {
+            if (splittedCommand.length < 3) {
                 sendCommand("ERRO Argumentos faltando em ENVIAR_MENSAGEM!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala " + roomName + " não existe!");
@@ -641,10 +641,10 @@ public class Server {
                 return;
             }
 
-            String message = splitedCommand[2];
+            String message = splittedCommand[2];
 
-            for (int i = 3; i < splitedCommand.length; i++) {
-                message = message.concat(" " + splitedCommand[i]);
+            for (int i = 3; i < splittedCommand.length; i++) {
+                message = message.concat(" " + splittedCommand[i]);
             }
 
             room.sendMessageForMembers(this.username, message);
