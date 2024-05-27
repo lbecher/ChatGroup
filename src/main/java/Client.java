@@ -1,14 +1,11 @@
-package br.unioeste;
-
-import com.google.common.hash.Hashing;
-
+import javax.crypto.SecretKey;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
-import javax.crypto.SecretKey;
+import com.google.common.hash.Hashing;
 
 public class Client extends Crypt {
     private String server;
