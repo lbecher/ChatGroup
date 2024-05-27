@@ -33,7 +33,7 @@ public class Main {
     }
 
     private static void help() {
-        System.out.println("Iniciar servidor:  java Main [ --servidor | -s ] PORTA");
-        System.out.println("Iniciar cliente:   java Main [ --cliente  | -c ] [ IP | DOMINIO ]:PORTA");
+        System.out.println("Iniciar servidor:   <comando>   --servidor | -s   PORTA");
+        System.out.println("Iniciar cliente:    <comando>   --cliente  | -c   IP:PORTA | DOMINIO:PORTA");
     }
 }
