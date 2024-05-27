@@ -1,6 +1,7 @@
 package br.unioeste;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -17,9 +18,12 @@ public class Client extends Crypt {
     private BufferedReader in;   // Buffer de saída do usuário.
     private SecretKey aesKey;    // Chave do AES.
 
+    private BufferedReader userInput;
+
     public Client(String server, int port) {
         this.server = server;
         this.port = port;
+        this.userInput = new BufferedReader(new InputStreamReader(System.in));
     }
 
     public void run() {
@@ -34,20 +38,34 @@ public class Client extends Crypt {
                 return;
             }
 
-            while (true) {
-                String command = receiveCommand();
-                String[] splitedCommand = command.split(" ", 1);
+            /*
+             * O código a partir é provisório, feito para testes!
+             */
 
-                switch (splitedCommand[0]) {
-                    case "ERRO":
-                        handleError(splitedCommand[1]);
-                        break;
-
-                    default:
-                        handleError("Comando inválido ou não esparado!");
-                        break;
+            // Thread para receber mensagens do servidor
+            Thread serverReaderThread = new Thread(() -> {
+                try {
+                    while (true) {
+                        System.out.println(receiveCommand());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            }
+            });
+            serverReaderThread.start();
+
+            // Thread para ler mensagens do usuário
+            Thread userReaderThread = new Thread(() -> {
+                try {
+                    String userInput;
+                    while ((userInput = this.userInput.readLine()) != null) {
+                        sendCommand(userInput);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            userReaderThread.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,6 +100,13 @@ public class Client extends Crypt {
             if (command.equals("REGISTRO_OK")) {
                 clientLog("REGISTRO_OK");
                 break;
+            }
+            else if (command.equals("ERRO")) {
+                String error = command.split(" ", 1)[1];
+                handleError(error);
+            }
+            else {
+                handleError("Comando inesperado durante o registro!");
             }
         }
     }
@@ -144,9 +169,8 @@ public class Client extends Crypt {
     private void sendCommand(String command) {
         if (aesKey != null) {
             try {
-                command = encodeBase64(command.getBytes());
                 byte[] bytes = encryptAes(command.getBytes(), aesKey);
-                command = new String(bytes);
+                command = encodeBase64(bytes);
             } catch (Exception e) {
                 handleError("Erro ao criptografar o comando enviado!");
                 e.printStackTrace();
@@ -158,8 +182,12 @@ public class Client extends Crypt {
 
 
     private void handleError(String error) {
-        // provisório, o ideal é isso aparecer na interface
-        clientLog("[ERRO REPORTADO PELO SERVIDOR] " + error);
+
+        /*
+         * O código desse método é provisório, feito para testes!
+         */
+
+        clientLog("[ERRO REPORTADO] " + error);
     }
 
 
