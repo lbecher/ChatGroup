@@ -169,7 +169,8 @@ public class Client extends Crypt {
     private void sendCommand(String command) {
         if (aesKey != null) {
             try {
-                byte[] bytes = encryptAes(command.getBytes(), aesKey);
+                byte[] bytes = command.getBytes();
+                bytes = encryptAes(bytes, aesKey);
                 command = encodeBase64(bytes);
             } catch (Exception e) {
                 handleError("Erro ao criptografar o comando enviado!");

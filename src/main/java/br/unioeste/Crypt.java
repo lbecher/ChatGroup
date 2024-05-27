@@ -39,13 +39,11 @@ public class Crypt {
     }
 
     protected byte[] decodeBase64(String string) {
-        byte[] bytes = Base64.getDecoder().decode(string);
-        return bytes;
+        return Base64.getDecoder().decode(string);
     }
 
     protected String encodeBase64(byte[] bytes) {
-        String string = Base64.getEncoder().encodeToString(bytes);
-        return string;
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
     protected byte[] decryptRsa(byte[] bytes, PrivateKey privateKey) throws Exception {
