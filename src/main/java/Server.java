@@ -255,64 +255,57 @@ public class Server {
 
                 // Criptografa a conexão entre o cliente e o servidor.
                 if (!authenticateClient()) {
-                    delete();
+                    return;
                 }
 
                 while (true) {
                     String command = receiveCommand();
-                    String[] splittedCommand = command.split(" ");
 
-                    switch (splittedCommand[0]) {
-                        case "CRIAR_SALA":
-                            // Lida com o restante do comando em outro método.
-                            handleRoomCreation(splittedCommand);
-                            break;
+                    if (command != null) {
+                        String[] splittedCommand = command.split(" ");
+
+                        switch (splittedCommand[0]) {
+                            case "CRIAR_SALA":
+                                // Lida com o restante do comando em outro método.
+                                handleRoomCreation(splittedCommand);
+                                break;
+                            
+                            case "LISTAR_SALAS":
+                                handleListRooms(splittedCommand);
+                                break;
+                            
+                            case "ENTRAR_SALA":
+                                // Lida com o restante do comando em outro método.
+                                handleJoinRoom(splittedCommand);
+                                break;
+                            
+                            case "SAIR_SALA":
+                                // Lida com o restante do comando em outro método.
+                                handleExitRoom(splittedCommand);
+                                break;
+                            
+                            case "FECHAR_SALA":
+                                handleCloseRoom(splittedCommand);
+                                break;
+                            
+                            case "BANIR_USUARIO":
+                                handleBanUser(splittedCommand);
+                                break;
+                            
+                            case "ENVIAR_MENSAGEM":
+                                // Lida com o restante do comando em outro método.
+                                handleSendMessage(splittedCommand);
+                                break;
                         
-                        case "LISTAR_SALAS":
-                            handleListRooms(splittedCommand);
-                            break;
-                        
-                        case "ENTRAR_SALA":
-                            // Lida com o restante do comando em outro método.
-                            handleJoinRoom(splittedCommand);
-                            break;
-                        
-                        case "SAIR_SALA":
-                            // Lida com o restante do comando em outro método.
-                            handleExitRoom(splittedCommand);
-                            break;
-                        
-                        case "FECHAR_SALA":
-                            handleCloseRoom(splittedCommand);
-                            break;
-                        
-                        case "BANIR_USUARIO":
-                            handleBanUser(splittedCommand);
-                            break;
-                        
-                        case "ENVIAR_MENSAGEM":
-                            // Lida com o restante do comando em outro método.
-                            handleSendMessage(splittedCommand);
-                            break;
-                    
-                        default:
-                            sendCommand("ERRO Comando inválido ou não esparado!");
-                            break;
+                            default:
+                                sendCommand("ERRO Comando inválido ou não esparado!");
+                                break;
+                        }
+                    }
+                    else {
+                        sendCommand("ERRO Comando nulo recebido!");
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-
-
-        private void delete() {
-            try {
-                in.close();
-                out.close();
-                socket.close();
-                clients.remove(username);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -323,7 +316,7 @@ public class Server {
         // Método que recebe as streams de comandos do cliente.
         private String receiveCommand() throws Exception {
             String command = in.readLine();
-            if (aesKey != null) {
+            if (aesKey != null && command != null) {
                 try {
                     byte[] bytes = decodeBase64(command);
                     bytes = decryptAes(bytes, aesKey);
