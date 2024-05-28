@@ -26,7 +26,7 @@ public class Crypt {
 
     protected SecretKey generateAesKey() throws Exception {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256);
+        keyGen.init(128);
         return keyGen.generateKey();
     }
 
