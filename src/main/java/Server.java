@@ -73,7 +73,7 @@ public class Server {
 
         // Nomes de usuários dos membros.
         private HashSet<String> members;
-        private HashSet<String> denny_list;
+        this.denny_list = new HashSet<String>();
 
         // Construtor.
         public Room(String roomName, String admin, boolean isPrivate, String hashedPassword) {
