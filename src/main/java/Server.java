@@ -73,6 +73,7 @@ public class Server {
 
         // Nomes de usuários dos membros.
         private HashSet<String> members;
+        private HashSet<String> denny_list;
 
         // Construtor.
         public Room(String roomName, String admin, boolean isPrivate, String hashedPassword) {
@@ -82,6 +83,7 @@ public class Server {
             this.hashedPassword = hashedPassword;
 
             this.members = new HashSet<String>();
+            this.denny_list = new HashSet<String>();
         }
 
 
@@ -99,6 +101,11 @@ public class Server {
         // Método para verificar se um usuário é admin da sala.
         public boolean isAdmin(String username) {
             return this.admin.equals(username);
+        }
+
+        // Método para verificar se um usuário está banido.
+        public boolean isBanned(String username) {
+            return this.denny_list.contains(username);
         }
 
 
@@ -142,10 +149,9 @@ public class Server {
 
         // Método para banir um usuário.
         public void banMember(String member) {
-            if (member != null) {
-                this.members.remove(member);
-                notifyAboutUserBan(member);
-            }
+            this.denny_list.add(member);
+            this.members.remove(member);
+            notifyAboutUserBan(member);
         }
 
         // Método que encaminha as mensagens para os membros da sala.
@@ -493,11 +499,16 @@ public class Server {
             String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
-                sendCommand("ERRO A sala " + roomName + " não existe!");
+                sendCommand("ERRO A sala '" + roomName + "' não existe!");
                 return;
             }
 
             Room room = rooms.get(roomName);
+
+            if (room.isBanned(username)) {
+                sendCommand("ERRO Você está banido desta sala!");
+                return;
+            }
 
             if (room.isPrivate()) {
                 if (splittedCommand.length < 3) {
@@ -513,7 +524,7 @@ public class Server {
                 }
             }
 
-            rooms.get(roomName).joinRoom(this.username);
+            rooms.get(roomName).joinRoom(username);
             sendCommand("ENTRAR_SALA_OK " + room.listAllRoomMembers());
         }
 
