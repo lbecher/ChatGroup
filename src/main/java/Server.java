@@ -73,7 +73,6 @@ public class Server {
 
         // Nomes de usuários dos membros.
         private HashSet<String> members;
-        this.denny_list = new HashSet<String>();
 
         // Construtor.
         public Room(String roomName, String admin, boolean isPrivate, String hashedPassword) {
@@ -102,10 +101,7 @@ public class Server {
             return this.admin.equals(username);
         }
 
-        // Método para verificar se um usuário está banido.
-         public boolean isBanned(String username) {
-            return this.denny_list.contains(username);
-        }
+
 
         // Método para o cliente entrar na sala.
         public void joinRoom(String member) {
@@ -147,7 +143,6 @@ public class Server {
         // Método para banir um usuário.
         public void banMember(String member) {
             if (member != null) {
-                this.denny_list.add(member);
                 this.members.remove(member);
                 notifyAboutUserBan(member);
             }
@@ -503,11 +498,6 @@ public class Server {
             }
 
             Room room = rooms.get(roomName);
-
-            if (room.isBanned(this.username)) {
-                sendCommand("ERRO Usuário está banido desta sala!");
-                return;
-            }
 
             if (room.isPrivate()) {
                 if (splittedCommand.length < 3) {
