@@ -28,6 +28,7 @@ public class Client extends Crypt {
     public void run() {
         clientLog("Iniciando o cliente...");
 
+
         try {
             startSocket();
             
@@ -43,30 +44,109 @@ public class Client extends Crypt {
 
             // Thread para receber mensagens do servidor
             Thread serverReaderThread = new Thread(() -> {
+                StringBuilder str;
                 try {
                     while (true) {
                         String commmand = receiveCommand();
-                        String[] splittedCommmand = commmand.split(" ", 2);
+                        String[] splittedCommand = commmand.split(" ", 2);
 
-                        switch (splittedCommmand[0]) {
+                        switch (splittedCommand[0]) {
                             case "ERRO":
-                                handleError("[SERVIDOR] " + splittedCommmand[1]);
+                                handleError("[SERVIDOR] " + splittedCommand[1]);
                                 break;
 
                             case "MENSAGEM":
-                                splittedCommmand = commmand.split(" ", 3);
+                                splittedCommand = splittedCommand[1].split(" ", 3);
 
-                                if (splittedCommmand.length < 2) {
+                                if (splittedCommand.length < 2) {
                                     handleError("Coisas faltando no comando MENSAGEM!");
                                 }
 
-                                String roomName = splittedCommmand[0];
-                                String sender = splittedCommmand[1];
-                                String message = splittedCommmand[2];
+                                String roomName = splittedCommand[0];
+                                String sender = splittedCommand[1];
+                                String message = splittedCommand[2];
 
-                                String str = "MENSAGEM DE " + sender + " NA SALA " + roomName + ": " + message;
+                                 str = new StringBuilder("MENSAGEM DE " + sender + " NA SALA " + roomName + ": " + message);
 
-                                clientLog(str);
+                                clientLog(str.toString());
+                                break;
+
+                            case "SALAS":
+
+                                splittedCommand = splittedCommand[1].split(" ");
+
+                                 str = new StringBuilder("SALAS: " + splittedCommand[0]);
+
+                                for (int i = 1; i < splittedCommand.length; i++) {
+                                    str.append(", ").append(splittedCommand[i]);
+
+                                }
+
+                                clientLog(str.toString());
+                                break;
+
+                            case "ENTROU":
+                                splittedCommand = splittedCommand[1].split(" ", 2);
+
+                                if (splittedCommand.length < 2) {
+                                    handleError("Coisas faltando no comando MENSAGEM!");
+                                }
+
+                                str = new StringBuilder("O USUARIO " + splittedCommand[1] + " ENTROU NA SALA " + splittedCommand[0] + " ");
+
+                                clientLog(String.valueOf(str));
+                                break;
+
+                            case "SAIU":
+                                splittedCommand = splittedCommand[1].split(" ", 2);
+
+                                if (splittedCommand.length < 2) {
+                                    handleError("Coisas faltando no comando MENSAGEM!");
+                                }
+
+                                str = new StringBuilder("O USUARIO " + splittedCommand[1] + " SAIU DA SALA " + splittedCommand[0] + " ");
+
+
+                                clientLog(String.valueOf(str));
+                                break;
+
+
+                            case "ENTRAR_SALA_OK":
+
+                                splittedCommand = splittedCommand[1].split(" ");
+
+                                str = new StringBuilder("VOCE ENTROU NA SALA\n" + "USUARIOS DA SALA: " + splittedCommand[0]);
+
+                                for (int i = 1; i < splittedCommand.length; i++) {
+                                    str.append(", ").append(splittedCommand[i]);
+
+                                }
+
+                                clientLog(String.valueOf(str));
+
+                                break;
+
+                            case "BANIDO_DA_SALA":
+
+                                str = new StringBuilder("VOCE FOI BANIDO DA SALA " + splittedCommand[1]);
+                                clientLog(String.valueOf(str));
+                                break;
+
+                            case "CRIAR_SALA_OK":
+                                clientLog("SALA CRIADA COM SUCESSO!");
+                                break;
+
+                            case "SAIR_SALA_OK":
+                                clientLog("VOCE SAIU DA SALA COM SUCESSO!");
+                                break;
+
+                            case "FECHAR_SALA_OK":
+                                clientLog("SALA FECHADA COM SUCESSO!");
+                                break;
+
+                            case "SALA_FECHADA":
+                                str = new StringBuilder("A SALA " + splittedCommand[1] + " FOI FECHADA.");
+                                clientLog(String.valueOf(str));
                                 break;
 
                             default:
@@ -160,7 +240,7 @@ public class Client extends Crypt {
             String command = receiveCommand();
 
             if (command.equals("REGISTRO_OK")) {
-                clientLog("REGISTRO_OK");
+                clientLog("REGISTRO CRIADO COM SUCESSO!");
                 break;
             }
             else if (command.split(" ", 2)[0].equals("ERRO")) {
