@@ -116,7 +116,7 @@ public class Server {
 
         // Método que lista todos os membros da sala.
         public String listAllRoomMembers() {
-            return this.admin + " " + members.stream().collect(Collectors.joining(" "));
+            return this.admin + ", " + members.stream().collect(Collectors.joining(", ")) + ".";
         }
 
         // Método que valida a senha hash.
@@ -150,7 +150,7 @@ public class Server {
 
         // Método que encaminha as mensagens para os membros da sala.
         public void sendMessageForMembers(String sender, String message) {
-            String command = "MENSAGEM " + this.roomName + " " + sender + " " + message;
+            String command = "MENSAGEM DA SALA " + this.roomName + ": " + sender + ": " + message;
 
             ClientHandler admin = clients.get(this.admin);
             admin.sendCommand(command);
@@ -165,7 +165,7 @@ public class Server {
 
         // Método que notifica todos os membros de uma sala sobre o novo membro.
         public void notifyMembersAboutNewMember(String username) {
-            String command = "ENTROU " + this.roomName + " " + username;
+            String command = username + " ENTROU NA SALA " + this.roomName + " ";
 
             ClientHandler admin = clients.get(this.admin);
             admin.sendCommand(command);
@@ -178,7 +178,7 @@ public class Server {
 
         // Método que informa os membros de uma sala sobre a saída de um membro.
         public void notifyMembersAboutMemberExit(String username) {
-            String command = "SAIU " + this.roomName + " " + username;
+            String command = "O USUARIO " + username + " SAIU DA SALA " + this.roomName + " " ;
 
             ClientHandler admin = clients.get(this.admin);
             admin.sendCommand(command);
@@ -210,7 +210,7 @@ public class Server {
             member_banned.sendCommand(command);
 
             // Mensagem para todos os outros membros da sala.
-            command = "SAIU " + this.roomName + " " + member;
+            command = member + " SAIU DA SALA " + this.roomName + " ";
             for (String roomMamber : this.members) {
                 ClientHandler client = clients.get(roomMamber);
                 client.sendCommand(command);
@@ -479,8 +479,8 @@ public class Server {
                 sendCommand("ERRO Argumentos inválidos para o comando LISTAR_SALAS");
             }
 
-            String concatenatedRoomsNames = String.join(" ", rooms.keySet());
-            sendCommand("SALAS " + concatenatedRoomsNames);
+            String concatenatedRoomsNames = String.join(", ", rooms.keySet());
+            sendCommand("SALAS: " + concatenatedRoomsNames);
         }
 
         // Método que adiciona um membro na sala.
@@ -514,7 +514,7 @@ public class Server {
             }
 
             rooms.get(roomName).joinRoom(this.username);
-            sendCommand("ENTRAR_SALA_OK " + room.listAllRoomMembers());
+            sendCommand("ENTRAR_SALA_OK\n" + "LISTA DE MEMBROS DA SALA " + roomName + ": " + room.listAllRoomMembers());
         }
 
         // Método para sair de uma sala.
@@ -608,7 +608,7 @@ public class Server {
 
             room.banMember(username);
             
-            sendCommand("BANIMENTO_OK " + username);
+            sendCommand("BANIMENTO_OK " + username + " da sala " + roomName);
         }
 
         // Método que encaminha as mensagens para os membros da sala.
