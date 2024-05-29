@@ -83,6 +83,7 @@ public class Server {
             this.hashedPassword = hashedPassword;
 
             this.members = new HashSet<String>();
+            this.denny_list = new HashSet<String>();
         }
 
 
