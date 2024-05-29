@@ -46,12 +46,29 @@ public class Client extends Crypt {
                 try {
                     while (true) {
                         String commmand = receiveCommand();
-                        String[] splittedCommmand = commmand.split(" ");
+                        String[] splittedCommmand = commmand.split(" ", 2);
 
                         switch (splittedCommmand[0]) {
                             case "ERRO":
-                                handleError("[SERVIDOR] " + commmand.split(" ", 2)[1]);
+                                handleError("[SERVIDOR] " + splittedCommmand[1]);
                                 break;
+
+                            case "MENSAGEM":
+                                splittedCommmand = commmand.split(" ", 3);
+
+                                if (splittedCommmand.length < 2) {
+                                    handleError("Coisas faltando no comando MENSAGEM!");
+                                }
+
+                                String roomName = splittedCommmand[0];
+                                String sender = splittedCommmand[1];
+                                String message = splittedCommmand[2];
+
+                                String str = "MENSAGEM DE " + sender + " NA SALA " + roomName + ": " + message;
+
+                                clientLog(str);
+                                break;
+
                             default:
                                 clientLog(commmand);
                                 break;
