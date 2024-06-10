@@ -1,37 +1,38 @@
 
 {
-java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ªîä‰üÿÿÿÿ8ëìÀÆù1
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(ªîä‰üÿÿÿÿ8¾Äïëú1
 v
-java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(®Ôó§8ëìÀÆù1
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(®Ôó§8¾Äïëú1
 {
-java:S2293K"YReplace the type specification in this constructor call with the diamond operator ("<>").(û¯’øÿÿÿÿ8ììÀÆù1
-m	java:S117J"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ÿ€Ÿ8íìÀÆù1
-r	java:S117p"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(±ğˆüÿÿÿÿ8íìÀÆù1
-s	java:S117¦"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÕùÑıÿÿÿÿ8íìÀÆù1
-s	java:S117Ô"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÕùÑıÿÿÿÿ8îìÀÆù1
-s	java:S117ñ"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(à¦îşÿÿÿÿ8îìÀÆù1
-n	java:S117ò"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶¬œé8îìÀÆù1
-n	java:S117†"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¸¶‘Î8îìÀÆù1
-n	java:S117Œ"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶¬œé8îìÀÆù1
-n	java:S117¤"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(­Û 8îìÀÆù1
-n	java:S117¾"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¡à€ğ8îìÀÆù1
-n	java:S117É"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÂëåÌ8îìÀÆù1
+java:S2293Z"YReplace the type specification in this constructor call with the diamond operator ("<>").(û¯’øÿÿÿÿ8¾Äïëú1
+s	java:S117í"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(à¦’šúÿÿÿÿ8ÁÄïëú1
 l
-java:S2095!"JUse try-with-resources or close this "ServerSocket" in a "finally" clause.(ã½Üãøÿÿÿÿ8àíÀÆù1
-G	java:S1064"+Replace this use of System.out by a logger.(ßœÔá8ğíÀÆù1
+java:S2095)"JUse try-with-resources or close this "ServerSocket" in a "finally" clause.(ã½Üãøÿÿÿÿ8„Æïëú1
+G	java:S106="+Replace this use of System.out by a logger.( †›Ã8‘Æïëú1
 
-java:S11308"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(–ö–ÿÿÿÿÿ8ñíÀÆù1
-u	java:S116D"TRename this field "room_name" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÁÂèøÿÿÿÿ8ñíÀÆù1
-q	java:S116G"URename this field "is_private" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›£®Ô8ñíÀÆù1
-J
-java:S1125l"(Remove the unnecessary boolean literals.(„¢Àşÿÿÿÿ8öíÀÆù1
-[
-java:S1117s"9Rename "admin" which hides the field declared at line 69.(ºÛ¬Üÿÿÿÿÿ8÷íÀÆù1
+java:S1130A"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(–ö–ÿÿÿÿÿ8‘Æïëú1
+K
+java:S1125“"(Remove the unnecessary boolean literals.(„¢Àşÿÿÿÿ8—Æïëú1
+\
+java:S1117²"9Rename "admin" which hides the field declared at line 78.(ºÛ¬Üÿÿÿÿÿ8™Æïëú1
+\
+java:S1117Á"9Rename "admin" which hides the field declared at line 78.(ºÛ¬Üÿÿÿÿÿ8šÆïëú1
+\
+java:S1117Î"9Rename "admin" which hides the field declared at line 78.(ºÛ¬Üÿÿÿÿÿ8›Æïëú1
+\
+java:S1117Û"9Rename "admin" which hides the field declared at line 78.(ºÛ¬Üÿÿÿÿÿ8œÆïëú1
+\
+java:S1117è"9Rename "admin" which hides the field declared at line 78.(ºÛ¬Üÿÿÿÿÿ8Æïëú1
+Y	java:S125Ÿ"<This block of commented-out lines of code should be removed.(‹‘€ 8¢Æïëú1
 `
-java:S1117Ú"=Rename "username" which hides the field declared at line 137.(˜ƒ²Ğşÿÿÿÿ8ƒîÀÆù1
-
-java:S2175û"aA "ConcurrentHashMap<String, ClientHandler>" cannot contain a "ClientHandler" in a "String" type.(¯¡Àû8×¸ÇÆù1
-Š
-java:S1130„"lRemove the declaration of thrown exception 'java.io.IOException', as it cannot be thrown from method's body.(´•¾Ñ8Ù¸ÇÆù1
+java:S1117á"=Rename "username" which hides the field declared at line 255.(Ååğüÿÿÿÿ8¤Æïëú1
+c
+java:S4426ï"@Use a key length of at least 2048 bits for RSA cipher algorithm.(¹¸®–üÿÿÿÿ8²Æïëú1
 H
-java:S33988"&Move this method into "ClientHandler".(–ö–ÿÿÿÿÿ8ŸîÀÆù1
+java:S3398A"&Move this method into "ClientHandler".(–ö–ÿÿÿÿÿ8µÆïëú1
+H
+java:S1068€"*Remove this unused "socket" private field.(Ü‘·8¶Æïëú1
+U
+java:S1144ö"2Remove this unused private "getPrivateKey" method.(®ô™úÿÿÿÿ8¶Æïëú1
+T
+java:S1144ú"1Remove this unused private "decodeBase64" method.(—şéÛûÿÿÿÿ8¶Æïëú1
