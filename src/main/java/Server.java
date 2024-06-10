@@ -1,18 +1,12 @@
-package br.unioeste;
-
+import javax.crypto.SecretKey;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.Key;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -26,11 +20,11 @@ public class Server {
     private static final ConcurrentHashMap<String, ClientHandler> clients = new ConcurrentHashMap<String, ClientHandler>();
     private static final ConcurrentHashMap<String, Room> rooms = new ConcurrentHashMap<String, Room>();
 
-
-    // Construtor da classe servidor.
-    public Server(String port) {
-        this.port = Integer.parseInt(port);
+    public Server(int port) {
+        this.port = port;
     }
+
+    
 
     // Método que inicializa o servidor.
     public void run() {
@@ -38,7 +32,7 @@ public class Server {
 
         try {
             // Inicializa o soquete do servidor.
-            ServerSocket serverSocket = new ServerSocket(this.port);
+            ServerSocket serverSocket = new ServerSocket(port);
             serverLog("O servidor está rodando e aguardando por conexões.");
 
             // Enquanto o servidor estiver rodando, aguarda novas conexões serem identificadas.
@@ -62,7 +56,7 @@ public class Server {
     }
 
     // Método que verifica se o nome de usuário já esta sendo utilizado.
-    private static boolean isUsernameTaken(String username) throws IOException {
+    private static boolean isUsernameTaken(String username) {
         return clients.containsKey(username);
     }
     
@@ -72,30 +66,30 @@ public class Server {
 
     // CLASSE PARA AS SALAS.
     private static class Room {
-        // Nomes de usuários dos membros.
-        private HashSet<String> members;
         private String roomName;
         private String admin;
         private String hashedPassword;
         private boolean isPrivate;
 
-
+        // Nomes de usuários dos membros.
+        private HashSet<String> members;
+        private HashSet<String> denny_list;
 
         // Construtor.
-        public Room(String roomName, String admin, String hashedPassword) {
+        public Room(String roomName, String admin, boolean isPrivate, String hashedPassword) {
             this.roomName = roomName;
             this.admin = admin;
+            this.isPrivate = isPrivate;
             this.hashedPassword = hashedPassword;
 
             this.members = new HashSet<String>();
-
-            isPrivate = hashedPassword != null;
+            this.denny_list = new HashSet<String>();
         }
 
 
 
         // Método para verificar se uma sala é privada.
-        public boolean getIsPrivate() {
+        public boolean isPrivate() {
             return isPrivate;
         }
 
@@ -109,21 +103,12 @@ public class Server {
             return this.admin.equals(username);
         }
 
-
-
-        // Método que cria as salas publicas ou privadas.
-        public void createRoom(String roomName, String admin, String hashedPassword) {
-            if (!rooms.containsKey(roomName)) {
-                Room room = new Room(roomName, admin, hashedPassword);
-                rooms.put(roomName, room);
-
-                ClientHandler roomAdmin = clients.get(this.admin);
-                roomAdmin.sendCommand("CRIAR_SALA_OK");
-            } else {
-                ClientHandler roomAdmin = clients.get(this.admin);
-                roomAdmin.sendCommand("ERRO Uma sala já existe com esse nome!");
-            }
+        // Método para verificar se um usuário está banido.
+        public boolean isBanned(String username) {
+            return this.denny_list.contains(username);
         }
+
+
 
         // Método para o cliente entrar na sala.
         public void joinRoom(String member) {
@@ -143,8 +128,7 @@ public class Server {
 
         // Método que valida a senha hash.
         public boolean validateHashedPassword(String hashedPassword) {
-            // DISCUTIR ISSO AAAAAAAAAAAAAAAAAH
-            return (this.hashedPassword != null && !this.hashedPassword.equals(hashedPassword)) ? false : true;
+            return this.hashedPassword.equals(hashedPassword);
         }
 
         // Método para o usuário sair de uma sala.
@@ -157,22 +141,21 @@ public class Server {
         public void removeMember(String member) {
             if (this.admin.equals(member)) {
                 ClientHandler client = clients.get(member);
-                client.sendCommand("ERRO : O administrador não pode ser removido!");
+                client.sendCommand("ERRO O administrador não pode ser removido!");
                 return;
             }
             this.members.remove(member);
         }
 
         // Método para banir um usuário.
-        public void banUser(String member) {
-            if (member != null) {
-                this.members.remove(member);
-                notifyAboutUserBan(member);
-            }
+        public void banMember(String member) {
+            this.denny_list.add(member);
+            this.members.remove(member);
+            notifyAboutUserBan(member);
         }
 
         // Método que encaminha as mensagens para os membros da sala.
-        public void sendCommandForMembers(String sender, String message) {
+        public void sendMessageForMembers(String sender, String message) {
             String command = "MENSAGEM " + this.roomName + " " + sender + " " + message;
 
             ClientHandler admin = clients.get(this.admin);
@@ -227,13 +210,8 @@ public class Server {
 
         //Método que notifica os membros de uma sala sobre o banimento de um usuário da sala.
         public void notifyAboutUserBan(String member) {
-            // Mensagem para o admin da sala.
-            String command = "BANIMENTO_OK " + member;
-            ClientHandler admin = clients.get(this.admin);
-            admin.sendCommand(command);
-
             // Mensagem para o usuário banido.
-            command = "BANIDO_DA_SALA " + this.roomName;
+            String command = "BANIDO_DA_SALA " + this.roomName;
             ClientHandler member_banned = clients.get(member);
             member_banned.sendCommand(command);
 
@@ -251,16 +229,14 @@ public class Server {
 
 
     // CLASSE PARA OS CLIENTES CONECTADOS.
-    private static class ClientHandler implements Runnable {
+    private static class ClientHandler extends Crypt implements Runnable {
         private String username;   // Nome do usuário.
         private Socket socket;     // Socket do usuário.
         private PrintWriter out;   // Buffer de saída do usuário.
         private BufferedReader in; // Buffer de saída do usuário.
-        private KeyPair keyPair;   // Senha do usuário.
+        private KeyPair keyPair;   // Par de chaves.
+        private SecretKey aesKey;  // Chave do AES.
 
-
-
-        // Construtor da classe ClientHandler.
         public ClientHandler(Socket socket) {
             this.socket = socket;
             this.username = null;
@@ -281,76 +257,116 @@ public class Server {
         public void run() {
             try {
                 // Registra o socket e nome de usuário no hashmap clients.
-                this.registerClient();
+                registerClient();
 
                 // Criptografa a conexão entre o cliente e o servidor.
-                //this.authenticateClient();
+                if (!authenticateClient()) {
+                    return;
+                }
 
                 while (true) {
-                    String command = recieveCommand();
-                    String[] splitedCommand = command.split(" ");
+                    String command = receiveCommand();
 
-                    switch (splitedCommand[0]) {
-                        case "CRIAR_SALA":
-                            // Lida com o restante do comando em outro método.
-                            handleRoomCreation(splitedCommand);
-                            break;
+                    if (command != null) {
+                        String[] splittedCommand = command.split(" ");
+
+                        switch (splittedCommand[0]) {
+                            case "CRIAR_SALA":
+                                // Lida com o restante do comando em outro método.
+                                handleRoomCreation(splittedCommand);
+                                break;
+                            
+                            case "LISTAR_SALAS":
+                                handleListRooms(splittedCommand);
+                                break;
+                            
+                            case "ENTRAR_SALA":
+                                // Lida com o restante do comando em outro método.
+                                handleJoinRoom(splittedCommand);
+                                break;
+                            
+                            case "SAIR_SALA":
+                                // Lida com o restante do comando em outro método.
+                                handleExitRoom(splittedCommand);
+                                break;
+                            
+                            case "FECHAR_SALA":
+                                handleCloseRoom(splittedCommand);
+                                break;
+                            
+                            case "BANIR_USUARIO":
+                                handleBanUser(splittedCommand);
+                                break;
+                            
+                            case "ENVIAR_MENSAGEM":
+                                // Lida com o restante do comando em outro método.
+                                handleSendMessage(splittedCommand);
+                                break;
                         
-                        case "LISTAR_SALAS":
-                            handleListRooms(splitedCommand);
-                            break;
-                        
-                        case "ENTRAR_SALA":
-                            // Lida com o restante do comando em outro método.
-                            handleJoinRoom(splitedCommand);
-                            break;
-                        
-                        case "SAIR_SALA":
-                            // Lida com o restante do comando em outro método.
-                            handleExitRoom(splitedCommand);
-                            break;
-                        
-                        case "FECHAR_SALA":
-                            handleCloseRoom(splitedCommand);
-                            break;
-                        
-                        case "BANIR_USUARIO":
-                            handleBanUser(splitedCommand);
-                            break;
-                        
-                        case "ENVIAR_MENSAGEM":
-                            // Lida com o restante do comando em outro método.
-                            handleSendCommand(splitedCommand);
-                            break;
-                    
-                        default:
-                            sendCommand("ERRO Comando inválido ou não esparado!");
-                            break;
+                            default:
+                                sendCommand("ERRO Comando inválido ou não esparado!");
+                                break;
+                        }
+                    }
+                    else {
+                        sendCommand("ERRO Comando nulo recebido!");
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
 
 
-        // Método que registra o usuário no servidor.
-        public void registerClient() throws IOException {
+        // Método que recebe as streams de comandos do cliente.
+        private String receiveCommand() throws Exception {
+            String command = in.readLine();
+            if (aesKey != null && command != null) {
+                try {
+                    byte[] bytes = decodeBase64(command);
+                    bytes = decryptAes(bytes, aesKey);
+                    command = new String(bytes);
+                } catch (Exception e) {
+                    sendCommand("ERRO Erro ao descriptografar o comando recebido!");
+                    e.printStackTrace();
+                }
+            }
+            return command;
+        }
 
+        // Método que envia as streams dos comandos para cliente.
+        private void sendCommand(String command) {
+            if (aesKey != null) {
+                try {
+                    byte[] bytes = command.getBytes();
+                    bytes = encryptAes(bytes, aesKey);
+                    command = encodeBase64(bytes);
+                } catch (Exception e) {
+                    out.println("ERRO Erro ao criptografar o comando enviado!");
+                    e.printStackTrace();
+                }
+            }
+            out.println(command);
+        }
+
+
+
+        // Método que registra o usuário no servidor.
+        public void registerClient() throws Exception {
             // Permanece nesse método até obter um nome de usuário válid ou a conexão ser fechada.
             while (true) {
                 // Deve ter o formato REGISTRO <username>.
-                String command = recieveCommand();
-                String[] splitedCommand = command.split(" ");
+                String command = receiveCommand();
+                String[] splittedCommand = command.split(" ");
 
                 // Valida quantidade de argumentos.
-                if (splitedCommand.length == 2) {
-                    String action = splitedCommand[0];
+                if (splittedCommand.length == 2) {
+                    String action = splittedCommand[0];
 
                     // Valida o comando para registrar-se.
                     if (action.equals("REGISTRO")) {
-                        String username = splitedCommand[1];
+                        String username = splittedCommand[1];
 
                         // Valida disponibilidade do nome de usuário.
                         if (!isUsernameTaken(username)) {
@@ -360,133 +376,147 @@ public class Server {
                             return;
                         }
                         else {
-                            sendCommand("ERRO : Nome de usuário em uso! Tente novamente.");
+                            sendCommand("ERRO Nome de usuário em uso! Tente novamente.");
                         }
                     }
                     else {
-                        sendCommand("ERRO : Comando inválido ou não esparado!");
+                        sendCommand("ERRO Comando inválido ou não esparado!");
                     }
                 }
                 else {
-                    sendCommand("ERRO : Comando ou argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
+                    sendCommand("ERRO Comando ou argumentos inválidos! Tente REGISTRO <nome_de_usuário>.");
                 }
             }
         }
 
         // Método que criar uma conexão criptografada entre o cliente e o servidor.
-        public boolean authenticateClient() throws IOException {
-            String command = recieveCommand();
-            String[] splitedCommand = command.split(" ");
+        public boolean authenticateClient() throws Exception {
+            String command = receiveCommand();
+            String[] splittedCommand = command.split(" ");
 
-            if (splitedCommand.length != 2) {
+            if (splittedCommand.length != 2) {
                 sendCommand("ERRO Comando inválido ou com número errado de argumentos!");
                 return false;
             }
 
-            if (!splitedCommand[0].equals("AUTENTICACAO")) {
+            if (!splittedCommand[0].equals("AUTENTICACAO")) {
                 sendCommand("ERRO Comando inesperado!");
                 return false;
             }
 
             try {
-                this.generateKeyPair();
-            } catch (NoSuchAlgorithmException e) {
+                keyPair = generateKeyPair();
+            } catch (Exception e) {
                 sendCommand("ERRO Erro no servidor!");
-                serverLog(e.toString());
+                e.printStackTrace();
                 return false;
             }
 
-            String publicKey = this.getPublicKey();
-            sendCommand("CHAVE_PUBLICA " + this.encodeBase64(publicKey));
+            String publicKeyBase64 = encodeBase64(keyPair.getPublic().getEncoded());
+            sendCommand("CHAVE_PUBLICA " + publicKeyBase64);
 
-            // Falta coisas aqui
+            command = receiveCommand();
+            splittedCommand = command.split(" ");
+
+            String encryptedAesKeyBase64 = splittedCommand[1];
+
+            try {
+                byte[] encryptedAesKey = decodeBase64(encryptedAesKeyBase64);
+                byte[] decrypyedAesKey = decryptRsa(encryptedAesKey, keyPair.getPrivate());
+                aesKey = secretKeyKeyFromBytes(decrypyedAesKey);
+            } catch (Exception e) {
+                sendCommand("ERRO Erro ao descriptografar chave simétrica!");
+                e.printStackTrace();
+                return false;
+            }
 
             return true;
-        }
-
-        // Método que recebe as streams de comandos do servidor.
-        private String recieveCommand() throws IOException {
-            return in.readLine();
-        }
-
-        // Método que envia as streams dos comandos para cliente.
-        private void sendCommand(String command) {
-            out.println(command);
         }
 
 
 
         // Método para criar uma sala.
-        private void handleRoomCreation(String[] splitedCommand) {
-            if (splitedCommand.length <= 2 || splitedCommand.length >= 5) {
-                sendCommand("ERRO : Argumentos faltando em CRIAR_SALA!");
+        private void handleRoomCreation(String[] splittedCommand) {
+            if (splittedCommand.length <= 2 || splittedCommand.length >= 5) {
+                sendCommand("ERRO Argumentos faltando ou sobrando em CRIAR_SALA!");
                 return;
             }
 
-            switch (splitedCommand[1]) {
+            String roomName = splittedCommand[2];
+
+            if (rooms.containsKey(roomName)) {
+                sendCommand("ERRO Uma sala já existe com esse nome!");
+                return;
+            }
+
+            String hashedPassword = null;
+            boolean isPrivate = false;
+
+            switch (splittedCommand[1]) {
                 case "PUBLICA":
-                    if (splitedCommand.length != 3) {
-                        sendCommand("ERRO : Quantidade errada de argumentos em CRIAR_SALA!");
+                    if (splittedCommand.length != 3) {
+                        sendCommand("ERRO Argumentos demais em CRIAR_SALA!");
                     }
-                    rooms.get(splitedCommand[2]).createRoom(splitedCommand[2], this.username, null);
                     break;
 
                 case "PRIVADA":
-                    if (splitedCommand.length != 4) {
-                        sendCommand("ERRO : Quantidade errada de argumentos em CRIAR_SALA!");
+                    if (splittedCommand.length != 4) {
+                        sendCommand("ERRO Argumentos faltando em CRIAR_SALA!");
                         return;
                     }
-                    rooms.get(splitedCommand[2]).createRoom(splitedCommand[2], this.username, splitedCommand[3]);
+                    hashedPassword = splittedCommand[3];
+                    isPrivate = true;
                     break;
 
                 default:
-                    sendCommand("ERRO : Argumento inválido em CRIAR_SALA!");
-                    break;
+                    sendCommand("ERRO Argumento inválido em CRIAR_SALA!");
+                    return;
             }
+
+            Room room = new Room(roomName, this.username, isPrivate, hashedPassword);
+            rooms.put(roomName, room);
+
+            sendCommand("CRIAR_SALA_OK");
         }
 
         // Método para listar todas as salas.
-        private void handleListRooms(String[] splitedCommand) {
-            if (splitedCommand.length != 1) {
-                sendCommand("ERRO : Argumentos inválidos para o comando LISTAR_SALAS");
+        private void handleListRooms(String[] splittedCommand) {
+            if (splittedCommand.length != 1) {
+                sendCommand("ERRO Argumentos inválidos para o comando LISTAR_SALAS");
             }
 
-            String concatenatedRoomsNames = rooms.entrySet().stream()
-                    .filter(entry -> entry.getKey() instanceof String && entry.getValue() instanceof Room)
-                    .map(entry -> {
-                        String name = entry.getKey();
-                        Room room = entry.getValue();
-                        String availabilityString = room.getIsPrivate() ? "Privada" : "Publica";
-                        return name + "(" + availabilityString + ")";
-                    })
-                    .collect(Collectors.joining(" "));
-
+            String concatenatedRoomsNames = String.join(" ", rooms.keySet());
             sendCommand("SALAS " + concatenatedRoomsNames);
         }
 
         // Método que adiciona um membro na sala.
-        private void handleJoinRoom(String[] splitedCommand) {
-            if (splitedCommand.length < 2) {
+        private void handleJoinRoom(String[] splittedCommand) {
+            if (splittedCommand.length < 2) {
                 sendCommand("ERRO Argumentos faltando em ENTRAR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
-                sendCommand("ERRO A sala " + roomName + " não existe!");
+                sendCommand("ERRO A sala '" + roomName + "' não existe!");
                 return;
             }
 
             Room room = rooms.get(roomName);
 
-            if (room.getIsPrivate()) {
-                if (splitedCommand.length < 3) {
+            if (room.isBanned(username)) {
+                sendCommand("ERRO Você está banido desta sala!");
+                return;
+            }
+
+            if (room.isPrivate()) {
+                if (splittedCommand.length < 3) {
                     sendCommand("ERRO Não foi informado uma senha para entrar na sala privada " + roomName + "!");
                     return;
                 }
 
-                String hashedPassword = splitedCommand[1];
+                String hashedPassword = splittedCommand[2];
 
                 if (!room.validateHashedPassword(hashedPassword)) {
                     sendCommand("ERRO Senha incorreta!");
@@ -494,18 +524,18 @@ public class Server {
                 }
             }
 
-            rooms.get(roomName).joinRoom(this.username);
+            rooms.get(roomName).joinRoom(username);
             sendCommand("ENTRAR_SALA_OK " + room.listAllRoomMembers());
         }
 
         // Método para sair de uma sala.
-        private void handleExitRoom(String[] splitedCommand) {
-            if (splitedCommand.length != 2) {
+        private void handleExitRoom(String[] splittedCommand) {
+            if (splittedCommand.length != 2) {
                 sendCommand("ERRO Argumentos inválidos para o comando SAIR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala informada não existe!");
@@ -524,13 +554,13 @@ public class Server {
         }
 
         // Método que fecha uma sala.
-        private void handleCloseRoom(String[] splitedCommand) { 
-            if (splitedCommand.length < 2) {
+        private void handleCloseRoom(String[] splittedCommand) { 
+            if (splittedCommand.length < 2) {
                 sendCommand("ERRO Argumentos faltando em ENTRAR_SALA!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala " + roomName + " não existe!");
@@ -551,48 +581,55 @@ public class Server {
         }
 
         // Método para banir um usuário de uma sala.
-        private void handleBanUser(String[] splitedCommand) {
+        private void handleBanUser(String[] splittedCommand) {
             // Verifica a quantidade de argumentos lidos.
-            if (splitedCommand.length != 3) {
-                sendCommand("ERRO : Argumentos inválidos ou incompletos para o comando BANIR_USUARIO.");
+            if (splittedCommand.length != 3) {
+                sendCommand("ERRO Argumentos inválidos ou incompletos para o comando BANIR_USUARIO.");
                 return;
             }
+
+            String roomName = splittedCommand[1];
+            String username = splittedCommand[2];
 
             // Verifica se a sala existe.
-            if (!rooms.containsKey(splitedCommand[1])) {
-                sendCommand("ERRO : A sala informada nao existe.");
+            if (!rooms.containsKey(roomName)) {
+                sendCommand("ERRO A sala " + roomName + " não existe!");
                 return;
             }
+
+            Room room = rooms.get(roomName);
 
             // Verifica se o banidor é o admin da sala.
-            if (!Objects.equals(rooms.get(splitedCommand[1]).admin, this.username)) {
-                sendCommand("ERRO : Voce não é o admin da sala.");
+            if (!room.isAdmin(this.username)) {
+                sendCommand("ERRO Apenas o admin pode banir um usuário!");
                 return;
             }
 
-            // Verifica que o usuário a ser banido é membro da sala.
-            if (!rooms.get(splitedCommand[1]).isMember(splitedCommand[2])) {
-                sendCommand("ERRO : Usuario informado não é membro da sala.");
+            // Verifica se o usuário a ser banido é membro da sala.
+            if (!room.isMember(username)) {
+                sendCommand("ERRO Usuário informado não é membro da sala.");
                 return;
             }
 
             // Verifica se o usuário a ser banido é o próprio usuário banidor.
-            if (Objects.equals(this.username, splitedCommand[2])) {
-                sendCommand("ERRO : Você não pode banir-se da sala.");
+            if (this.username.equals(username)) {
+                sendCommand("ERRO Você não pode banir-se da sala.");
                 return;
             }
 
-            rooms.get(splitedCommand[1]).banUser(splitedCommand[2]);
+            room.banMember(username);
+            
+            sendCommand("BANIMENTO_OK " + username);
         }
 
         // Método que encaminha as mensagens para os membros da sala.
-        private void handleSendCommand(String[] splitedCommand) {
-            if (splitedCommand.length < 3) {
+        private void handleSendMessage(String[] splittedCommand) {
+            if (splittedCommand.length < 3) {
                 sendCommand("ERRO Argumentos faltando em ENVIAR_MENSAGEM!");
                 return;
             }
 
-            String roomName = splitedCommand[1];
+            String roomName = splittedCommand[1];
 
             if (!rooms.containsKey(roomName)) {
                 sendCommand("ERRO A sala " + roomName + " não existe!");
@@ -606,38 +643,13 @@ public class Server {
                 return;
             }
 
-            String message = splitedCommand[2];
+            String message = splittedCommand[2];
 
-            for (int i = 3; i < splitedCommand.length; i++) {
-                message = message.concat(" " + splitedCommand[i]);
+            for (int i = 3; i < splittedCommand.length; i++) {
+                message = message.concat(" " + splittedCommand[i]);
             }
 
-            room.sendCommandForMembers(this.username, message);
-        }
-
-
-
-
-        private void generateKeyPair() throws NoSuchAlgorithmException {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(1024);
-            this.keyPair = keyPairGenerator.generateKeyPair();
-        }
-        private String getPublicKey() {
-            Key publicKey = keyPair.getPublic();
-            return publicKey.toString();
-        }
-        private String getPrivateKey() {
-            Key privateKey = keyPair.getPrivate();
-            return privateKey.toString();
-        }
-        private String decodeBase64(String string) {
-            byte[] decodedBytes = Base64.getDecoder().decode(string);
-            return new String(decodedBytes);
-        }
-        private String encodeBase64(String string) {
-            byte[] stringBytes = string.getBytes();
-            return Base64.getEncoder().encodeToString(stringBytes);
+            room.sendMessageForMembers(this.username, message);
         }
     }
 }
